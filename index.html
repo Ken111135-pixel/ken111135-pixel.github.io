@@ -220,9 +220,20 @@ body{background:var(--bg);color:var(--chalk);font:500 15px/1.6 var(--f-body);mar
 }
 .ad{height:52px!important;border:0!important;overflow:hidden;background:transparent}
 .ad>*{max-width:100%}
+.side-ad{display:none;position:fixed;top:50%;transform:translateY(-50%);width:300px;max-height:90vh;overflow:hidden;z-index:1}
+.side-ad.l{left:calc(50% - 240px - 316px)}
+.side-ad.r{right:calc(50% - 240px - 316px)}
+@media (min-width:1130px){.side-ad{display:block}}
 </style>
 </head>
 <body>
+<div class="side-ad l" role="complementary" aria-label="広告"><!-- admax -->
+<script src="https://adm.shinobi.jp/s/d280cc060d89a807645c95a4dda7f38b"></script>
+<!-- admax --></div>
+<div class="side-ad r" role="complementary" aria-label="広告"><!-- admax -->
+<script src="https://adm.shinobi.jp/s/3e2fad8366bb6a0807f6a06c10209633"></script>
+<!-- admax --></div>
+
 
 <main class="app">
   <section class="scr" id="screenGame">
