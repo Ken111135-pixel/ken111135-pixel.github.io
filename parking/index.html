@@ -40,16 +40,16 @@ canvas#view{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hold i u{display:block;height:100%;width:0;background:var(--ok)}
 .hold.ok{border-color:var(--ok);color:var(--ok)}
 /* controls deck */
-.deck{position:absolute;left:0;right:0;bottom:50px;height:var(--deck,212px);padding-top:10px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(12,14,17,0) 0,rgba(12,14,17,.9) 22%,#0c0e11 100%)}
-.wheelbox{flex:0 0 min(42%,184px);aspect-ratio:1;display:grid;place-items:center;touch-action:none}
+.deck{position:absolute;left:0;right:0;bottom:50px;height:var(--deck,162px);padding-top:8px;padding-bottom:max(8px,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(12,14,17,0) 0,rgba(12,14,17,.9) 22%,#0c0e11 100%)}
+.wheelbox{flex:0 0 min(36%,142px);aspect-ratio:1;display:grid;place-items:center;touch-action:none}
 .wheel{width:100%;height:100%;touch-action:none;will-change:transform;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
 .wheel svg{width:100%;height:100%;display:block;pointer-events:none}
-.lever{flex:0 0 46px;height:min(100%,168px);position:relative;border-radius:14px;background:linear-gradient(90deg,#10141a,#1b222b);border:1px solid var(--line);touch-action:none}
+.lever{flex:0 0 46px;height:min(100%,132px);position:relative;border-radius:14px;background:linear-gradient(90deg,#10141a,#1b222b);border:1px solid var(--line);touch-action:none}
 .lever .stop{position:absolute;left:0;right:0;text-align:center;font:700 13px/1 var(--f-num);color:var(--mute);transform:translateY(-50%)}
 .lever .stop.on{color:#fff}
 .lever .rail{position:absolute;left:50%;top:18px;bottom:18px;width:6px;margin-left:-3px;border-radius:9px;background:#05070a;box-shadow:inset 0 0 0 1px #2a3440}
 .lever .knob{position:absolute;left:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8f9aa8,#39424e 60%,#1b2027);box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 0 0 2px rgba(255,255,255,.12);transition:top .14s}
-.pedals{flex:1;min-width:0;height:100%;max-height:168px;display:flex;gap:8px;align-items:stretch}
+.pedals{flex:1;min-width:0;height:100%;max-height:132px;display:flex;gap:8px;align-items:stretch}
 .pedal{flex:1;min-width:0;border:0;border-radius:16px;color:#fff;font:900 12px/1.2 var(--f-ui);letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:10px 2px;touch-action:none;position:relative;overflow:hidden}
 .pedal::before{content:"";position:absolute;inset:8px 8px 34px;border-radius:10px;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 3px,rgba(255,255,255,.06) 3px 6px);box-shadow:inset 0 0 0 2px rgba(255,255,255,.14)}
 .pedal.brake{background:linear-gradient(180deg,#b3302e,#7d1d1c);flex:1}
@@ -102,9 +102,9 @@ ol.rk li span:last-child{font:700 15px/1 var(--f-num);font-variant-numeric:tabul
 @media (orientation:landscape) and (max-height:560px){
   .deck{height:auto;top:auto;pointer-events:none;background:none;padding-top:0;justify-content:space-between;align-items:flex-end}
   .deck>*{pointer-events:auto}
-  .wheelbox{flex:0 0 min(34vh,150px)}
-  .lever{flex:0 0 46px;height:min(46vh,140px)}
-  .pedals{flex:0 0 min(40vw,230px);height:min(40vh,130px)}
+  .wheelbox{flex:0 0 min(26vh,110px)}
+  .lever{flex:0 0 46px;height:min(32vh,100px)}
+  .pedals{flex:0 0 min(40vw,230px);height:min(28vh,90px)}
   .deck .gap{flex:1;pointer-events:none}
 }
 @media (prefers-reduced-motion:reduce){.lever .knob{transition:none}}
