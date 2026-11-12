@@ -40,7 +40,7 @@ canvas#view{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hold i u{display:block;height:100%;width:0;background:var(--ok)}
 .hold.ok{border-color:var(--ok);color:var(--ok)}
 /* controls deck */
-.deck{position:absolute;left:0;right:0;bottom:calc(50px + env(safe-area-inset-bottom,0px));height:var(--deck,212px);padding-top:10px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(12,14,17,0) 0,rgba(12,14,17,.9) 22%,#0c0e11 100%)}
+.deck{position:absolute;left:0;right:0;bottom:50px;height:var(--deck,212px);padding-top:10px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(12,14,17,0) 0,rgba(12,14,17,.9) 22%,#0c0e11 100%)}
 .wheelbox{flex:0 0 min(42%,184px);aspect-ratio:1;display:grid;place-items:center;touch-action:none}
 .wheel{width:100%;height:100%;touch-action:none;will-change:transform;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
 .wheel svg{width:100%;height:100%;display:block;pointer-events:none}
@@ -57,7 +57,7 @@ canvas#view{position:absolute;inset:0;width:100%;height:100%;display:block}
 .pedal.on{filter:brightness(1.35)}
 .pedal span{position:relative}
 /* overlays */
-.ov{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding-top:20px;padding-bottom:70px;background:rgba(8,10,13,.9);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);overflow:auto;touch-action:pan-y}
+.ov{position:absolute;inset:0 0 50px 0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding-top:20px;padding-bottom:20px;background:rgba(8,10,13,.9);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);overflow:auto;touch-action:pan-y}
 .ov>*{max-width:100%}
 .ov .eyebrow{font:700 11px/1 var(--f-num);letter-spacing:.2em;color:var(--amber)}
 .ov h1{margin:0;font:900 34px/1.1 var(--f-ui);letter-spacing:.02em}
@@ -95,7 +95,7 @@ ol.rk li span:first-child{font:700 14px/1 var(--f-num);color:var(--amber)}
 ol.rk li span:last-child{font:700 15px/1 var(--f-num);font-variant-numeric:tabular-nums}
 .note{font-size:11px;color:var(--mute)}
 .mute{position:absolute;top:64px;right:8px;z-index:30;width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(14,17,21,.7);color:#fff;font-size:15px;cursor:pointer;display:none}
-.ad-banner{position:absolute;left:0;right:0;bottom:0;height:calc(50px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);z-index:40;display:flex;align-items:center;justify-content:center;background:#0c0e11;overflow:hidden}
+.ad-banner{position:absolute;left:0;right:0;bottom:0;height:50px;z-index:40;display:flex;align-items:center;justify-content:center;background:#0c0e11;overflow:hidden}
 .ad-banner>*{max-width:100%}
 .flash{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,rgba(255,60,60,0) 35%,rgba(255,40,40,.55) 100%);opacity:0;transition:opacity .25s;z-index:15}
 .flash.on{opacity:1}
