@@ -606,7 +606,9 @@ function drawTarget(g,S,t){
 const STAGES=[stage1,typeof stage2==='function'?stage2:null,typeof stage3==='function'?stage3:null].filter(Boolean);
 const G={state:'title',idx:0,S:null,car:null,npcs:[],inp:{steer:0,thr:false,brk:false},time:0,times:[],hold:0,holdStart:0,practice:-1,
   cam:{x:0,y:0,z:14},parts:[],crash:null,wp:0,talkT:0,talked:{},t:0,wheel:0,grab:false,keyL:0,keyR:0,toast:0,clock:0};
-let ONLINE=true;
+let ONLINE=navigator.onLine!==false;
+addEventListener('online',()=>{ONLINE=true;if(G.state==='rank')openRank()});
+addEventListener('offline',()=>{ONLINE=false;if(G.state==='rank')renderRank()});
 const FBCFG={apiKey:"AIzaSyDUjXJNBn1PNtci-9zKcl341TjonWDAwC0",authDomain:"ranking-540df.firebaseapp.com",projectId:"ranking-540df",storageBucket:"ranking-540df.firebasestorage.app",messagingSenderId:"370788552124",appId:"1:370788552124:web:532254e07f315e59d92fb9"};
 const ctlEl={wheel:$('wheel'),deck:$('deck')};
 
@@ -840,7 +842,7 @@ const RK='park.rank.v1';let memRank=[];
 const todayJST=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
 function rkLoad(){try{const v=JSON.parse(localStorage.getItem(RK)||'null');if(Array.isArray(v))return v}catch(e){}return memRank}
 function rkSave(a){memRank=a;try{localStorage.setItem(RK,JSON.stringify(a))}catch(e){}}
-const CL={all:null,day:null,d:'',busy:false};
+const CL={all:null,day:null,d:'',busy:false,error:false};
 let FB=null;
 function fbInit(){
   if(!ONLINE)return Promise.resolve(null);
@@ -848,7 +850,7 @@ function fbInit(){
     const A=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
     const F=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
     return {F,db:F.getFirestore(A.initializeApp(FBCFG))};
-  })().catch(()=>{FB=null;return null});
+  })().catch(e=>{console.error('Firebase初期化に失敗',e);FB=null;CL.error=true;return null});
   return FB;
 }
 async function fbSubmit(e){
@@ -862,12 +864,12 @@ async function fbSubmit(e){
   }catch(err){return null}
 }
 async function fbFetch(){
-  const f=await fbInit();if(!f)return false;
+  const f=await fbInit();if(!f){CL.error=true;return false}
   try{const {F,db}=f,col=F.collection(db,'parking'),d=todayJST();
     const [a,b]=await Promise.all([F.getDocs(F.query(col,F.orderBy('t','asc'),F.limit(20))),F.getDocs(F.query(col,F.where('d','==',d),F.limit(300)))]);
     const mk=q=>{const r=[];q.forEach(x=>{const v=x.data();r.push({n:v.n,t:v.t,s:[v.s1,v.s2,v.s3],d:v.d})});return r};
-    CL.all=mk(a);CL.day=mk(b).sort((x,y)=>x.t-y.t).slice(0,20);CL.d=d;return true;
-  }catch(err){return false}
+    CL.all=mk(a);CL.day=mk(b).sort((x,y)=>x.t-y.t).slice(0,20);CL.d=d;CL.error=false;return true;
+  }catch(err){console.error('ランキングの読み込みに失敗',err);CL.error=true;return false}
 }
 let rkTab='all',mine=null;
 function rkAdd(e){
@@ -878,12 +880,12 @@ function renderRank(){
   const d=todayJST(),local=rkLoad(),cloud=ONLINE&&CL.all&&CL.d===d;
   const src=cloud?(rkTab==='day'?CL.day:CL.all):(rkTab==='day'?local.filter(x=>x.d===d):local),list=src.slice(0,cloud?20:10);
   $('tabAll').setAttribute('aria-pressed',rkTab==='all');$('tabDay').setAttribute('aria-pressed',rkTab==='day');
-  $('rkSub').textContent=(cloud?'みんなの記録・':ONLINE?(CL.busy?'読み込み中…(この端末の記録を表示)・':'オフライン(この端末の記録)・'):'この端末の記録・')+(rkTab==='day'?d+' の記録':'3ステージ合計タイム(短いほど上位)');
+  $('rkSub').textContent=(cloud?'みんなの記録・':CL.busy?'読み込み中…・':CL.error?'みんなの記録を読み込めませんでした・':!ONLINE?'オフライン(この端末の記録)・':'この端末の記録・')+(rkTab==='day'?d+' の記録':'3ステージ合計タイム(短いほど上位)');
   const ol=$('rkList');ol.textContent='';$('rkEmpty').hidden=list.length>0;
   list.forEach((e,i)=>{const li=document.createElement('li');if(mine&&mine===e.n+'|'+e.t+'|'+e.d)li.className='me';
     [(i+1)+'位',e.n,fmtT(e.t,2)].forEach(t=>{const s=document.createElement('span');s.textContent=t;li.appendChild(s)});ol.appendChild(li)});
 }
-async function openRank(){show('rank');renderRank();if(ONLINE){CL.busy=true;renderRank();await fbFetch();CL.busy=false;if(G.state==='rank')renderRank()}}
+async function openRank(){show('rank');CL.error=false;renderRank();if(ONLINE){CL.busy=true;renderRank();const ok=await fbFetch();CL.busy=false;if(!ok)CL.error=true;if(G.state==='rank')renderRank()}}
 $('tabAll').onclick=()=>{rkTab='all';renderRank()};$('tabDay').onclick=()=>{rkTab='day';renderRank()};
 
 /* ================= flow ================= */
