@@ -1,10 +1,17 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="自宅から出発して街を走り、会社近くの駐車場に停める。3ステージの合計タイムを競う無料ブラウザ駐車ゲーム。">
+<meta name="theme-color" content="#0c0e11">
 <title>出勤パーキング</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
 <style>
 /* 出勤パーキング: 朝のアスファルトと計器盤。道路グレーに信号機のアンバー、ルート案内のブルー。 */
-:root{--bg:#0c0e11;--panel:#161a20;--panel2:#212831;--ink:#eef2f6;--mute:#9aa6b4;--amber:#ffb224;--ok:#3ddc84;--bad:#ff5252;--route:#3b8cff;--line:#303a45;
+:root{--adh:calc(50px + env(safe-area-inset-bottom,0px));--deck:clamp(172px,25vh,212px);--bg:#0c0e11;--panel:#161a20;--panel2:#212831;--ink:#eef2f6;--mute:#9aa6b4;--amber:#ffb224;--ok:#3ddc84;--bad:#ff5252;--route:#3b8cff;--line:#303a45;
 --f-ui:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;--f-num:"Chakra Petch","Roboto Mono",ui-monospace,monospace;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -40,16 +47,16 @@ canvas#view{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hold i u{display:block;height:100%;width:0;background:var(--ok)}
 .hold.ok{border-color:var(--ok);color:var(--ok)}
 /* controls deck */
-.deck{position:absolute;left:0;right:0;bottom:50px;height:var(--deck,162px);padding-top:8px;padding-bottom:max(8px,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(12,14,17,0) 0,rgba(12,14,17,.9) 22%,#0c0e11 100%)}
-.wheelbox{flex:0 0 min(36%,142px);aspect-ratio:1;display:grid;place-items:center;touch-action:none}
+.deck{position:absolute;left:0;right:0;bottom:var(--adh);height:var(--deck);padding-top:8px;padding-bottom:8px;display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(12,14,17,0) 0,rgba(12,14,17,.9) 22%,#0c0e11 100%)}
+.wheelbox{flex:0 0 min(42%,calc(var(--deck) - 26px));aspect-ratio:1;display:grid;place-items:center;touch-action:none}
 .wheel{width:100%;height:100%;touch-action:none;will-change:transform;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
 .wheel svg{width:100%;height:100%;display:block;pointer-events:none}
-.lever{flex:0 0 46px;height:min(100%,132px);position:relative;border-radius:14px;background:linear-gradient(90deg,#10141a,#1b222b);border:1px solid var(--line);touch-action:none}
+.lever{flex:0 0 46px;height:min(100%,calc(var(--deck) - 44px));position:relative;border-radius:14px;background:linear-gradient(90deg,#10141a,#1b222b);border:1px solid var(--line);touch-action:none}
 .lever .stop{position:absolute;left:0;right:0;text-align:center;font:700 13px/1 var(--f-num);color:var(--mute);transform:translateY(-50%)}
 .lever .stop.on{color:#fff}
 .lever .rail{position:absolute;left:50%;top:18px;bottom:18px;width:6px;margin-left:-3px;border-radius:9px;background:#05070a;box-shadow:inset 0 0 0 1px #2a3440}
 .lever .knob{position:absolute;left:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8f9aa8,#39424e 60%,#1b2027);box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 0 0 2px rgba(255,255,255,.12);transition:top .14s}
-.pedals{flex:1;min-width:0;height:100%;max-height:132px;display:flex;gap:8px;align-items:stretch}
+.pedals{flex:1;min-width:0;height:100%;max-height:calc(var(--deck) - 44px);display:flex;gap:8px;align-items:stretch}
 .pedal{flex:1;min-width:0;border:0;border-radius:16px;color:#fff;font:900 12px/1.2 var(--f-ui);letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:10px 2px;touch-action:none;position:relative;overflow:hidden}
 .pedal::before{content:"";position:absolute;inset:8px 8px 34px;border-radius:10px;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 3px,rgba(255,255,255,.06) 3px 6px);box-shadow:inset 0 0 0 2px rgba(255,255,255,.14)}
 .pedal.brake{background:linear-gradient(180deg,#b3302e,#7d1d1c);flex:1}
@@ -57,7 +64,7 @@ canvas#view{position:absolute;inset:0;width:100%;height:100%;display:block}
 .pedal.on{filter:brightness(1.35)}
 .pedal span{position:relative}
 /* overlays */
-.ov{position:absolute;inset:0 0 50px 0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding-top:20px;padding-bottom:20px;background:rgba(8,10,13,.9);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);overflow:auto;touch-action:pan-y}
+.ov{position:absolute;inset:0 0 var(--adh) 0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding-top:20px;padding-bottom:20px;background:rgba(8,10,13,.9);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);overflow:auto;touch-action:pan-y}
 .ov>*{max-width:100%}
 .ov .eyebrow{font:700 11px/1 var(--f-num);letter-spacing:.2em;color:var(--amber)}
 .ov h1{margin:0;font:900 34px/1.1 var(--f-ui);letter-spacing:.02em}
@@ -95,20 +102,22 @@ ol.rk li span:first-child{font:700 14px/1 var(--f-num);color:var(--amber)}
 ol.rk li span:last-child{font:700 15px/1 var(--f-num);font-variant-numeric:tabular-nums}
 .note{font-size:11px;color:var(--mute)}
 .mute{position:absolute;top:64px;right:8px;z-index:30;width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(14,17,21,.7);color:#fff;font-size:15px;cursor:pointer;display:none}
-.ad-banner{position:absolute;left:0;right:0;bottom:0;height:50px;z-index:40;display:flex;align-items:center;justify-content:center;background:#0c0e11;overflow:hidden}
+.ad-banner{position:absolute;left:0;right:0;bottom:0;height:var(--adh);padding-bottom:env(safe-area-inset-bottom,0px);z-index:40;display:flex;align-items:center;justify-content:center;background:#0c0e11;overflow:hidden}
 .ad-banner>*{max-width:100%}
 .flash{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,rgba(255,60,60,0) 35%,rgba(255,40,40,.55) 100%);opacity:0;transition:opacity .25s;z-index:15}
 .flash.on{opacity:1}
 @media (orientation:landscape) and (max-height:560px){
   .deck{height:auto;top:auto;pointer-events:none;background:none;padding-top:0;justify-content:space-between;align-items:flex-end}
   .deck>*{pointer-events:auto}
-  .wheelbox{flex:0 0 min(26vh,110px)}
-  .lever{flex:0 0 46px;height:min(32vh,100px)}
-  .pedals{flex:0 0 min(40vw,230px);height:min(28vh,90px)}
+  .wheelbox{flex:0 0 min(32vh,130px)}
+  .lever{flex:0 0 46px;height:min(40vh,120px)}
+  .pedals{flex:0 0 min(40vw,230px);height:min(34vh,110px)}
   .deck .gap{flex:1;pointer-events:none}
 }
 @media (prefers-reduced-motion:reduce){.lever .knob{transition:none}}
 </style>
+</head>
+<body>
 
 <div class="app" id="app">
   <canvas id="view"></canvas>
@@ -714,7 +723,7 @@ function resize(){
   const r=cv.getBoundingClientRect();DPR=Math.min(window.devicePixelRatio||1,2.5);VW=r.width;VH=r.height;
   cv.width=Math.round(VW*DPR);cv.height=Math.round(VH*DPR);
   const land=window.matchMedia('(orientation:landscape) and (max-height:560px)').matches;
-  const dk=$('deck'),adH=50;PLAYH=land?VH-adH:(dk.hidden?VH-adH:VH-dk.offsetHeight-adH);
+  const dk=$('deck'),adH=$('adBanner').offsetHeight||50;PLAYH=land?VH-adH:(dk.hidden?VH-adH:VH-dk.offsetHeight-adH);
 }
 function render(dt){
   if(!G.S)return;const S=G.S,car=G.car,c=carC(car);
@@ -1003,3 +1012,5 @@ if(window.__PARKTEST)window.__park={stepNpcs,satOverlap,dimOf,G,loadStage,simSte
 
 })();
 </script>
+</body>
+</html>
