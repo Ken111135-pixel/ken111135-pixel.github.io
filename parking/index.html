@@ -92,8 +92,9 @@ canvas#view{position:absolute;inset:0;width:100%;height:100%;display:block}
 .tbl tr.tot td{border-bottom:0;color:var(--amber);font-size:16px}
 .ok{color:var(--ok)}.bad{color:var(--bad)}
 input.nm{font:700 16px/1 var(--f-ui);padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);width:min(100%,240px);text-align:center;-webkit-user-select:text;user-select:text}
-.tabs{display:flex;gap:8px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.tab{white-space:nowrap}
 .tab{font:700 13px/1 var(--f-ui);padding:9px 16px;border-radius:99px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.btn.ex{background:#b13cff;color:#fff;border-color:#b13cff;box-shadow:0 5px 0 #6a1f9c}.btn.ex[disabled]{opacity:.45}.eyebrow.ex{color:#d58bff}
 .tab[aria-pressed=true]{background:var(--amber);color:#1a1200;border-color:var(--amber)}
 ol.rk{list-style:none;margin:0;padding:0;width:100%;max-width:400px;display:grid;gap:6px}
 ol.rk li{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;text-align:left}
@@ -118,7 +119,6 @@ ol.rk li span:last-child{font:700 15px/1 var(--f-num);font-variant-numeric:tabul
 </style>
 </head>
 <body>
-
 <div class="app" id="app">
   <canvas id="view"></canvas>
   <div class="flash" id="flash"></div>
@@ -181,7 +181,9 @@ ol.rk li span:last-child{font:700 15px/1 var(--f-num);font-variant-numeric:tabul
       <div><b>04</b><span>青い枠に車全体をまっすぐ収めて、約1秒静止すれば駐車完了。</span></div>
     </div>
     <div class="row"><button class="btn" id="startBtn">出発する</button><button class="btn sub" id="rankBtn">ランキング</button></div>
-    <div class="tabs" id="practice"><span class="note" style="align-self:center">練習:</span><button class="tab" data-p="0">ステージ1</button><button class="tab" data-p="1">ステージ2</button><button class="tab" data-p="2">ステージ3</button></div>
+    <div class="row"><button class="btn ex" id="exBtn">EXステージ</button></div>
+    <p class="note" id="exNote"></p>
+    <div class="tabs" id="practice"><span class="note" style="align-self:center">練習:</span><button class="tab" data-p="0">ステージ1</button><button class="tab" data-p="1">ステージ2</button><button class="tab" data-p="2">ステージ3</button><button class="tab exonly" data-p="3" hidden>EX1</button><button class="tab exonly" data-p="4" hidden>EX2</button><button class="tab exonly" data-p="5" hidden>EX3</button></div>
     <div class="note">キーボード: ←→ ハンドル / ↑ アクセル / ↓ ブレーキ / D・N・R シフト</div>
   </section>
 
@@ -206,14 +208,15 @@ ol.rk li span:last-child{font:700 15px/1 var(--f-num);font-variant-numeric:tabul
     <div class="eyebrow bad">DISQUALIFIED</div>
     <h2 class="bad" id="fTitle">失格</h2>
     <p id="fText"></p>
-    <p class="note">失格のため、今回の記録はランキングに載りません。</p>
+    <p class="note" id="fNote">失格のため、今回の記録はランキングに載りません。</p>
+    <button class="btn" id="exResBtn" hidden>ここまでの記録を登録する</button>
     <div class="row"><button class="btn" id="retryBtn">最初からやり直す</button><button class="btn sub" id="pracBtn">このステージを練習</button></div>
     <button class="btn sub" id="toTitle1">タイトルへ</button>
   </section>
 
   <section class="ov gut" id="final" hidden>
-    <div class="eyebrow ok">ALL CLEAR</div>
-    <h2>無事に出社!</h2>
+    <div class="eyebrow ok" id="finEye">ALL CLEAR</div>
+    <h2 id="finH">無事に出社!</h2>
     <div class="rcard" id="rcard"><div class="rc-l" id="rcL"></div><div class="rc-n" id="rcN"></div><div class="rc-s" id="rcS"></div><div class="rc-x" id="rcX"></div></div>
     <p id="finText"></p>
     <div class="big" id="finTime">0:00.00</div>
@@ -221,15 +224,17 @@ ol.rk li span:last-child{font:700 15px/1 var(--f-num);font-variant-numeric:tabul
     <input class="nm" id="nameIn" maxlength="8" placeholder="ランキング名(8文字まで)" aria-label="ランキング名">
     <div class="row"><button class="btn" id="regBtn">ランキングに登録</button></div>
     <p class="note" id="finNote"></p>
+    <div class="row"><button class="btn ex" id="exGoBtn" hidden>EXステージに挑戦</button></div>
     <div class="row"><button class="btn sub" id="againBtn">もう一度</button><button class="btn sub" id="toTitle2">タイトルへ</button></div>
   </section>
 
   <section class="ov gut" id="rank" hidden>
     <h2>ランキング</h2>
+    <div class="tabs"><button class="tab" id="modeN" aria-pressed="true">3ステージ</button><button class="tab" id="modeEx" aria-pressed="false">EXステージ</button></div>
     <div class="tabs"><button class="tab" id="tabAll" aria-pressed="true">総合</button><button class="tab" id="tabDay" aria-pressed="false">デイリー</button></div>
     <p class="note" id="rkSub"></p>
     <ol class="rk" id="rkList"></ol>
-    <p class="note" id="rkEmpty">まだ記録がありません。3ステージ全部クリアすると載ります。</p>
+    <p class="note" id="rkEmpty">まだ記録がありません。</p>
     <button class="btn sub" id="rkBack">戻る</button>
   </section>
 
@@ -237,7 +242,7 @@ ol.rk li span:last-child{font:700 15px/1 var(--f-num);font-variant-numeric:tabul
 <!-- admax -->
 <script src="https://adm.shinobi.jp/s/3a17ce799eaf8ac2350d7a458e6aa1b4"></script>
 <!-- admax -->
-  </div>
+</div>
 </div>
 
 <script>
@@ -452,6 +457,126 @@ function stage3(){
   S.zoomFar=22;S.zoomNear=12;
   return S;
 }
+/* ================= EX stages (after the 3 regular stages) ================= */
+function exStage1(){
+  const S=blank();
+  S.id=4;S.title='雨あがりの月極駐車場(狭い枠)';S.need='back';
+  S.story='昨夜の雨で路面はまだ濡れている。両側に路駐の並ぶ商店街を抜け、交通量の多い国道を右折して、月極駐車場へ。通路は狭く、枠もぎりぎり。お尻からぴったり入れよう。';
+  S.tips=['<b>!</b><span>商店街は左右に路駐。中央をまっすぐ、ゆっくり。</span>','<b>→</b><span>国道は車が多い。右折は流れの切れ目を待つ。</span>','<b>R</b><span>通路が狭いので、枠を少し通り過ぎてから切り返さずに一発で入れるのがコツ。</span>'];
+  S.opening='8:30 自宅を出発。路面はまだ濡れている。';
+  S.roads.push({x:-40,y:20,w:98.5,h:7},{x:50,y:-50,w:8.5,h:200},{x:60.7,y:52,w:42.3,h:16.8,k:'lot'},{x:58.4,y:57,w:2.5,h:6.8,k:'gap'});
+  houseAt(S,2,3,16,11,8.2);
+  hl(S,23.5,-40,50,true);hl(S,20.55,-40,50,false,[[6.2,13.8]]);hl(S,26.45,-40,50);
+  vl(S,54.25,-50,150,true,[[19,28]]);vl(S,50.55,-50,150,false,[[19.5,27.5]]);vl(S,57.95,-50,150,false,[[19.5,27.5],[57,63.8]]);
+  S.cross.push({x:44.4,y:20,w:3.4,h:7,dir:'v'},{x:50,y:29.2,w:8.5,h:3.4,dir:'h'});
+  S.builds.push({x:22,y:3,w:22,h:13,k:'shop',col:'#d4d0c6',aw:'#2f6f8f',side:'b'},{x:62,y:2,w:22,h:20,k:'flat',col:'#c7c9cc',hg:16},{x:88,y:6,w:18,h:16,k:'shop',col:'#cfc8bd',aw:'#b5423a',side:'b'},
+    {x:-6,y:31,w:22,h:17,k:'flat',col:'#c9c2b4'},{x:20,y:31,w:24,h:18,k:'shop',col:'#d8cfc0',aw:'#c4872a',side:'t'},{x:62,y:30,w:24,h:19,k:'flat',col:'#b9bfc6',hg:15},{x:90,y:30,w:22,h:19,k:'shop',col:'#cbc4b8',aw:'#3f7a4f',side:'t'},
+    {x:0,y:54,w:46,h:22,k:'flat',col:'#c0c3c7',hg:14},{x:62,y:72,w:44,h:14,k:'flat',col:'#c8c2b6'},{x:-6,y:82,w:30,h:16,k:'flat',col:'#bdb7ac'});
+  [26,38,50].forEach(x=>S.trees.push({x:x-6,y:17.6,r:1.4}));
+  [36,48,60,72,84,96].forEach(y=>S.trees.push({x:48.5,y:y,r:1.25}));[36,48,76,88].forEach(y=>S.trees.push({x:59.9,y:y,r:1.25}));
+  [30,46].forEach(x=>S.lamps.push({x:x,y:18.4}));[22,40].forEach(x=>S.lamps.push({x:x,y:28.9,dy:-1}));
+  /* parked cars on both kerbs, staggered */
+  S.cars.push({cx:26,cy:21.1,a:E_,col:'#2f5fa8',type:'sedan'},{cx:38,cy:21.15,a:W_,col:'#d8b240',type:'kei'},{cx:31,cy:25.9,a:W_,col:'#c23b3b',type:'sedan'},{cx:41,cy:25.9,a:E_,col:'#e6e8ea',type:'van'});
+  /* lot: narrow slots (2.55m) and a narrow aisle (6.4m) */
+  const W2=Array(13).fill(2.55),A=mkRow(61.5,52,W2,N_),B=mkRow(61.5,63.6,W2,S_);
+  S.slots=A.concat(B);park(S,A,[0,1,2,3,4,5,7,8,9,10,12],31);park(S,B,[0,1,2,3,4,5,6,7,9,10,11,12],32);
+  S.target=B[8];S.arrows.push({x:64,y:60.4,a:E_},{x:96,y:60.4,a:W_});S.bumps.push({x:59.2,y:57.4,w:0.5,h:6});
+  S.npcs.push({x1:52.2,y1:170,x2:52.2,y2:-60,n:6,off:24,types:['sedan','van','kei','sedan','sedan','van']});
+  S.start={x:10,y:16.8,a:S_};
+  S.route=[{x:10,y:16},{x:10,y:19},{x:12.5,y:22.5,t:'left',say:'商店街へ左折。左右の路駐に注意'},{x:20,y:23.5},{x:44,y:23.5,t:'right',say:'国道を右折して南へ'},{x:56.4,y:30},{x:56.4,y:53,t:'left',say:'左手の月極駐車場へ(入口は狭い)'},{x:60.8,y:60.4,t:'in',say:'駐車場に入る'},{x:75,y:60.4},{x:87.6,y:60.4,t:'slot',say:'青い枠を通り過ぎて停まる(バック駐車)'},{x:83.2,y:66.5,t:'park',say:'Rに入れて、お尻から一発で枠へ'}];
+  S.guideEnd=9;
+  const bot=[{x:10,y:15.5},{x:10,y:18.6}].concat(arc(14.4,18.8,4.4,PI,PI/2+0.2,4)).concat([{x:20,y:23.5},{x:30,y:23.5},{x:44,y:23.5,v:3}]);
+  const Rr=4.5,xc=50.6;bot.push(...arc(xc,23.5+Rr,Rr,-PI/2,0,6));
+  bot.push({x:56.4,y:36,v:5},{x:56.4,y:52});
+  bot.push(...arc(56.4+4.4,56.0,4.4,PI,PI/2,6));
+  bot.push({x:68,y:60.4,v:4},{x:80,y:60.4,v:3},{x:87.575,y:60.4,v:1.5});
+  {const R=4.4,xs=87.575,ys=60.4;for(let i=0;i<=8;i++){const p=-PI/2*i/8;bot.push({x:+(xs+R*Math.sin(p)).toFixed(3),y:+(ys+R*(1-Math.cos(p))).toFixed(3),r:true,v:0.9})}}
+  bot.push({x:83.175,y:65.6,r:true,v:0.8},{x:83.175,y:66.5,r:true,v:0.7},{x:83.175,y:67.5,r:true,v:0.6});
+  S.bot=bot;
+  S.talks=[{at:1,who:'ラジオ',txt:'「8時30分。路面が濡れています。ご注意を」'},{at:3,who:'心の声',txt:'左右に路駐…幅ぎりぎりだ。'},{at:4,who:'心の声',txt:'右折は対向車を見てから。焦らない。'},{at:7,who:'心の声',txt:'通路が狭い。切り返さず一発で決めたい。'}];
+  S.zoomFar=22;S.zoomNear=13;
+  return S;
+}
+function exStage2(){
+  const S=blank();
+  S.id=5;S.title='大通り裏の縦列駐車(短い空き)';S.need='para';
+  S.story='始業は9時。取引先の本社ビルの裏手は、狭い路地と交通量の多い大通りの先。駐車場はどこも満車で、頼みは路肩に空いた短い1台分だけ。前後の車との間はほんの少し。大通りでは対向車の切れ目を見極めて、きれいに平行にそろえよう。';
+  S.tips=['<b>!</b><span>路地は左右に路駐の車が互い違い。幅ぎりぎりを蛇行して抜ける。</span>','<b>→</b><span>大通りは右折も左折も、対向車の切れ目を待つ。</span>','<b>P</b><span>空きは短い。前の車の横にぴったり寄せて停まり、Rで斜めに下がって切り返し、平行にそろえる。ハンドルは早めに戻す。</span>'];
+  S.opening='8:40 自宅を出発。始業20分前。';
+  S.roads.push({x:-40,y:20,w:102,h:7.4},{x:62,y:-50,w:10.5,h:220},{x:-40,y:72,w:290,h:6.4},{x:72.5,y:69.4,w:3.4,h:2.7},{x:101.5,y:69.5,w:60,h:2.5});
+  houseAt(S,2,3,15,11,8.2);
+  hl(S,23.7,-40,62,true);hl(S,20.55,-40,62,false,[[6.2,13.8]]);hl(S,26.85,-40,62);
+  vl(S,67.25,-50,170,true,[[19,27],[71,79]]);vl(S,62.55,-50,170,false,[[19,27],[71.5,79]]);vl(S,71.95,-50,170,false,[[19,27],[71.5,79]]);
+  hl(S,75.2,-40,250,true,[[62,72.5]]);hl(S,72.5,-40,62,false);hl(S,72.5,72.5,250,false);hl(S,77.9,-40,250,false,[[62,72.5]]);
+  S.cross.push({x:56,y:20,w:3.4,h:7.4,dir:'v'},{x:62,y:30,w:10.5,h:3.4,dir:'h'},{x:84,y:72,w:3.4,h:6.4,dir:'v'});
+  S.builds.push({x:22,y:3,w:24,h:12,k:'flat',col:'#c7c9cc',hg:15},{x:50,y:4,w:8,h:11,k:'shop',col:'#cfc8bd',aw:'#2f6f8f',side:'b'},{x:76,y:2,w:24,h:22,k:'flat',col:'#b9bfc6',hg:22},{x:104,y:4,w:26,h:18,k:'flat',col:'#c8c2b6',hg:18},
+    {x:-6,y:30,w:24,h:18,k:'flat',col:'#c9c2b4'},{x:22,y:30,w:34,h:20,k:'shop',col:'#d8cfc0',aw:'#b5423a',side:'t'},{x:76,y:34,w:24,h:34,k:'flat',col:'#aab2ba',hg:26},{x:104,y:32,w:28,h:30,k:'flat',col:'#bfc3c7',hg:20},{x:136,y:34,w:30,h:30,k:'shop',col:'#d4d0c6',aw:'#2f6f8f',side:'b'},
+    {x:0,y:56,w:56,h:12,k:'flat',col:'#c0c3c7',hg:18},{x:0,y:82,w:56,h:16,k:'flat',col:'#bdb7ac'},{x:92,y:84,w:70,h:20,k:'flat',col:'#c8c2b6'},{x:166,y:56,w:60,h:12,k:'flat',col:'#c8c2b6'},{x:166,y:84,w:60,h:14,k:'flat',col:'#c0c3c7',hg:14},{x:62,y:100,w:14,h:16,k:'shop',col:'#cbc4b8',aw:'#3f7a4f',side:'t'});
+  [-2,12,28,44].forEach(x=>S.trees.push({x:x+6,y:18,r:1.3}));
+  [36,52,90,106,122].forEach(y=>S.trees.push({x:60.4,y:y,r:1.25}));[36,52,64,100].forEach(y=>S.trees.push({x:74.4,y:y,r:1.25}));
+  [48,60,70].forEach(x=>S.lamps.push({x:x,y:18.4}));[30,50].forEach(x=>S.lamps.push({x:x,y:28.3,dy:-1}));[112,150].forEach(x=>S.lamps.push({x:x,y:68.6}));
+  S.cars.push({cx:24,cy:21.3,a:E_,col:'#8a97a4',type:'van'},{cx:47,cy:21.3,a:E_,col:'#1c1f24',type:'sedan'},{cx:29,cy:25.95,a:W_,col:'#d8b240',type:'kei'},{cx:37,cy:25.95,a:W_,col:'#c23b3b',type:'sedan'},{cx:44,cy:25.95,a:E_,col:'#e6e8ea',type:'van'});
+  /* kerbside parking strip: cars before and after the free parallel space */
+  const strip=[[104,'sedan','#2f5fa8'],[109.5,'kei','#d8b240'],[115,'sedan','#e6e8ea'],[121.1,'sedan','#c23b3b'],[132.3,'sedan','#1c1f24'],[138.4,'van','#8a97a4'],[143.9,'sedan','#3d7a55'],[149.4,'kei','#e6e8ea'],[154.9,'sedan','#6a4b8c']];
+  strip.forEach(q=>S.cars.push({cx:q[0],cy:70.75,a:E_,col:q[2],type:q[1]}));
+  S.slots=[];
+  S.target={x:123.5,y:69.5,w:6.4,d:2.4,cx:126.7,cy:70.7,axis:0};
+  S.npcs.push({x1:64.6,y1:190,x2:64.6,y2:-60,n:5,off:16,types:['sedan','van','sedan','kei','van']},{x1:250,y1:76.1,x2:-40,y2:76.1,n:3,off:0,types:['van','sedan','kei']});
+  S.start={x:10,y:16.8,a:S_};
+  S.route=[{x:10,y:16},{x:10,y:19},{x:12.5,y:22.5,t:'left',say:'路地へ左折。左右の路駐に注意'},{x:20,y:23.65},{x:36,y:23.65},{x:56,y:23.65,t:'right',say:'大通りを右折して南へ(対向車に注意)'},{x:69.9,y:30},{x:69.9,y:62,t:'left',say:'次の信号を左折して東へ'},{x:76,y:73.6},{x:110,y:73.6,t:'slot',say:'左の路肩の空きを通り過ぎて停まる(縦列駐車)'},{x:132.1,y:73.6},{x:125.4,y:70.7,t:'park',say:'Rに入れて、斜めに下がって平行にそろえる'}];
+  S.guideEnd=10;
+  const bot=[{x:10,y:15.5},{x:10,y:18.6}].concat(arc(14.4,18.8,4.4,PI,PI/2+0.2,4)).concat([{x:20,y:23.65},{x:28,y:23.65},{x:36,y:23.65},{x:44,y:23.65},{x:50,y:23.65,v:3}]);
+  bot.push(...arc(65.3,23.65+4.6,4.6,-PI/2,0,6));
+  bot.push({x:69.9,y:36,v:5},{x:69.9,y:64});
+  bot.push(...arc(69.9+4.4,69.2,4.4,PI,PI/2,6));
+  bot.push({x:80,y:73.6,v:4},{x:110,y:73.6,v:4},{x:128,y:73.6,v:2.4});
+  {const R=4.6,ys=73.6,yf=70.7,xf=125.4,th=Math.acos(1-(ys-yf)/(2*R)),xs=xf+2*R*Math.sin(th);
+   bot.push({x:+(xs-1.2).toFixed(3),y:ys,v:1.4},{x:+xs.toFixed(3),y:ys,v:1.2});
+   for(let i=0;i<=8;i++){const p=th*i/8;bot.push({x:+(xs-R*Math.sin(p)).toFixed(3),y:+(ys-R*(1-Math.cos(p))).toFixed(3),r:true,v:1.1})}
+   const x1=xs-R*Math.sin(th),y1=ys-R*(1-Math.cos(th));
+   for(let i=1;i<=8;i++){const p=th*(1-i/8);bot.push({x:+(x1+R*(Math.sin(p)-Math.sin(th))).toFixed(3),y:+(y1-R*(Math.cos(p)-Math.cos(th))).toFixed(3),r:true,v:0.6})}
+   const last=bot[bot.length-1];bot.push({x:+(last.x-0.3).toFixed(3),y:last.y,r:true,v:0.45});}
+  S.bot=bot;
+  S.talks=[{at:1,who:'ラジオ',txt:'「8時40分。この先の大通りは混雑しています」'},{at:3,who:'心の声',txt:'路地の蛇行。ミラー代わりに目で見て。'},{at:6,who:'心の声',txt:'右折は対向車の流れを見極めよう。'},{at:9,who:'心の声',txt:'駐車場は満車…路肩に短い空きが1台分だけ。'},{at:11,who:'心の声',txt:'前後はぎりぎり。落ち着いて、早めにハンドルを戻そう。'}];
+  S.zoomFar=22;S.zoomNear=12;
+  return S;
+}
+function exStage3(){
+  const S=blank();
+  S.id=6;S.title='本社ビルの満車駐車場(最終関門)';
+  S.story='今日は役員会議。始業前に本社の駐車場へ入れなければならない。入口のゲートは狭く、大通りでは対向車を横切って右折。場内の通路もぎりぎりで、空いているのは両隣に車がいる1枠だけ。前から、まっすぐ、ぴったりと。';
+  S.tips=['<b>→</b><span>ゲートは幅が狭い。対向車の切れ目で、大きく外から回り込んで右折。</span>','<b>⤓</b><span>ゲートを抜けたら通路へ左折。奥の列の空き枠を先に確認しておく。</span>','<b>P</b><span>空き枠の手前で通路の奥側に寄せ、減速して大きく右に切って、前向きにまっすぐ入れる。輪止めに注意。</span>'];
+  S.opening='8:30 自宅を出発。始業前に役員会議。';
+  S.roads.push({x:-40,y:20,w:190,h:7.4},{x:56,y:28.4,w:50,h:17,k:'lot'},{x:73.7,y:27.4,w:4.8,h:1.2,k:'gap'});
+  houseAt(S,2,3,15,11,8.2);
+  hl(S,23.7,-40,150,true);hl(S,20.55,-40,150,false,[[6.2,13.8]]);hl(S,26.85,-40,150,false,[[73.7,78.5]]);
+  S.cross.push({x:56,y:20,w:3.4,h:7.4,dir:'v'});
+  S.builds.push({x:22,y:3,w:24,h:12,k:'flat',col:'#c7c9cc',hg:15},{x:50,y:4,w:20,h:11,k:'shop',col:'#cfc8bd',aw:'#2f6f8f',side:'b'},{x:76,y:2,w:30,h:13,k:'flat',col:'#b9bfc6',hg:26},{x:112,y:4,w:30,h:11,k:'flat',col:'#c8c2b6',hg:18},
+    {x:-6,y:30,w:24,h:18,k:'flat',col:'#c9c2b4'},{x:22,y:30,w:30,h:20,k:'shop',col:'#d8cfc0',aw:'#b5423a',side:'t'},{x:56,y:49,w:50,h:20,k:'flat',col:'#aab2ba',hg:30},{x:110,y:30,w:34,h:30,k:'flat',col:'#bfc3c7',hg:20});
+  [-2,12,28,44].forEach(x=>S.trees.push({x:x+6,y:18,r:1.3}));[40,56,70].forEach(x=>S.lamps.push({x:x,y:18.4}));[96,112,128].forEach(x=>S.lamps.push({x:x,y:18.4}));
+  S.bolls.push({x:73.2,y:28.9},{x:79,y:28.9});
+  const W3=Array(16).fill(3.0),Aw=mkRow(56.5,28.4,Array(7).fill(2.5),N_),Ae=mkRow(78.2,28.4,Array(9).fill(2.5),N_),B=mkRow(56.5,40.2,W3,S_);
+  S.slots=Aw.concat(Ae,B);
+  park(S,Aw,[0,1,2,3,4,6],41);park(S,Ae,[0,1,2,3,5,6,7,8],42);
+  park(S,B,[0,1,2,3,4,5,6,7,8,9,10,11,13,14,15],43);
+  S.target=B[12];
+  S.arrows.push({x:80,y:36.2,a:E_});
+  S.npcs.push({x1:190,y1:25.9,x2:-60,y2:25.9,n:6,off:30,types:['sedan','van','sedan','kei','sedan','van']});
+  S.start={x:10,y:16.8,a:S_};
+  S.route=[{x:10,y:16},{x:10,y:19},{x:12.5,y:22.5,t:'left',say:'大通りへ左折して東へ'},{x:20,y:23.65},{x:50,y:23.65},{x:70,y:23.65,t:'right',say:'前方のゲートへ右折(対向車に注意・入口は狭い)'},{x:76.1,y:29},{x:76.1,y:33,t:'left',say:'場内を左折して奥の列へ'},{x:84,y:35.8},{x:88.5,y:35.8,t:'slot',say:'青い枠の手前から大きく右へ。前向きに入れる'},{x:94,y:41.3,t:'park',say:'まっすぐ入れて停止'}];
+  S.guideEnd=9;
+  const bot=[{x:10,y:15.5},{x:10,y:18.6}].concat(arc(14.4,18.8,4.4,PI,PI/2+0.2,4)).concat([{x:20,y:23.65},{x:35,y:23.65},{x:50,y:23.65,v:4},{x:65,y:23.65,v:3.6}]);
+  bot.push(...arc(71.7,23.65+4.4,4.4,-PI/2,0,6));
+  bot.push({x:76.1,y:30,v:3},{x:76.1,y:31.4,v:3});
+  bot.push(...arc(80.5,31.4,4.4,PI,PI/2,6));
+  bot.push({x:84,y:35.8,v:2.4},{x:88.5,y:35.8,v:1.4});
+  bot.push(...arc(88.5,41.3,5.5,-PI/2,0,10).map(q=>({...q,v:1.0})));
+  bot.push({x:94,y:41.4,v:0.6});
+  S.bot=bot;
+  S.talks=[{at:1,who:'ラジオ',txt:'「8時30分。本社前の大通りは混雑しています」'},{at:3,who:'心の声',txt:'右折は対向車の切れ目を待って、大きく回り込む。'},{at:5,who:'心の声',txt:'ゲートは狭い。ポールに当てないように。'},{at:7,who:'心の声',txt:'空いているのは1枠だけ…両隣の車が近い。'}];
+  S.zoomFar=22;S.zoomNear=12;
+  return S;
+}
 /* ================= rendering ================= */
 const cv=$('view'),ctx=cv.getContext('2d');
 let DPR=1,VW=0,VH=0,PLAYH=0;
@@ -620,7 +745,8 @@ function drawTarget(g,S,t){
   g.save();g.translate(s.cx,s.cy);g.fillStyle='rgba(255,255,255,.55)';g.font='900 2.4px "Chakra Petch",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('P',0,0);g.restore();
 }
 /* ================= game state ================= */
-const STAGES=[stage1,typeof stage2==='function'?stage2:null,typeof stage3==='function'?stage3:null].filter(Boolean);
+const NORM=3;
+const STAGES=[stage1,stage2,stage3,exStage1,exStage2,exStage3].filter(f=>typeof f==='function');
 const G={state:'title',idx:0,S:null,car:null,npcs:[],inp:{steer:0,thr:false,brk:false},time:0,times:[],hold:0,holdStart:0,practice:-1,
   cam:{x:0,y:0,z:14},parts:[],crash:null,wp:0,talkT:0,talked:{},t:0,wheel:0,grab:false,keyL:0,keyR:0,toast:0,clock:0};
 let ONLINE=navigator.onLine!==false;
@@ -723,7 +849,7 @@ function resize(){
   const r=cv.getBoundingClientRect();DPR=Math.min(window.devicePixelRatio||1,2.5);VW=r.width;VH=r.height;
   cv.width=Math.round(VW*DPR);cv.height=Math.round(VH*DPR);
   const land=window.matchMedia('(orientation:landscape) and (max-height:560px)').matches;
-  const dk=$('deck'),adH=$('adBanner').offsetHeight||50;PLAYH=land?VH-adH:(dk.hidden?VH-adH:VH-dk.offsetHeight-adH);
+  const dk=$('deck'),ab=$('adBanner'),adH=ab?(ab.offsetHeight||50):0;PLAYH=land?VH-adH:(dk.hidden?VH-adH:VH-dk.offsetHeight-adH);
 }
 function render(dt){
   if(!G.S)return;const S=G.S,car=G.car,c=carC(car);
@@ -860,6 +986,15 @@ const todayJST=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
 function rkLoad(){try{const v=JSON.parse(localStorage.getItem(RK)||'null');if(Array.isArray(v))return v}catch(e){}return memRank}
 function rkSave(a){memRank=a;try{localStorage.setItem(RK,JSON.stringify(a))}catch(e){}}
 const CL={all:null,day:null,d:'',busy:false,error:false};
+const RKX='park.ex.rank.v1';let memRankX=[];
+function exLoad(){try{const v=JSON.parse(localStorage.getItem(RKX)||'null');if(Array.isArray(v))return v}catch(e){}return memRankX}
+function exSave(a){memRankX=a;try{localStorage.setItem(RKX,JSON.stringify(a))}catch(e){}}
+const exCmp=(a,b)=>b.c-a.c||a.t-b.t;
+const exKey=e=>e.c*10000000-e.t;
+const CX={all:null,day:null,d:'',error:false};
+let exOpen=false;
+function exUnlocked(){if(exOpen)return true;try{if(localStorage.getItem('park.ex.unlock')==='1')return true}catch(e){}return rkLoad().length>0||exLoad().length>0}
+function unlockEx(){exOpen=true;try{localStorage.setItem('park.ex.unlock','1')}catch(e){}}
 let FB=null;
 function fbInit(){
   if(!ONLINE)return Promise.resolve(null);
@@ -888,21 +1023,47 @@ async function fbFetch(){
     CL.all=mk(a);CL.day=mk(b).sort((x,y)=>x.t-y.t).slice(0,20);CL.d=d;CL.error=false;return true;
   }catch(err){console.error('ランキングの読み込みに失敗',err);CL.error=true;return false}
 }
-let rkTab='all',mine=null;
+async function fbSubmitEx(e){
+  const f=await fbInit();if(!f)return null;
+  try{const {F,db}=f,col=F.collection(db,'parkingex'),k=exKey(e);
+    await F.addDoc(col,{n:e.n,c:e.c,t:e.t,k:k,d:e.d,ts:F.serverTimestamp()});
+    CX.all=null;CX.day=null;
+    const c=await F.getCountFromServer(F.query(col,F.where('k','>',k)));
+    const dl=await F.getDocs(F.query(col,F.where('d','==',e.d),F.limit(300)));let dr=1;dl.forEach(x=>{if(x.data().k>k)dr++});
+    return {all:c.data().count+1,daily:dr};
+  }catch(err){return null}
+}
+async function fbFetchEx(){
+  const f=await fbInit();if(!f){CX.error=true;return false}
+  try{const {F,db}=f,col=F.collection(db,'parkingex'),d=todayJST();
+    const [a,b]=await Promise.all([F.getDocs(F.query(col,F.orderBy('k','desc'),F.limit(20))),F.getDocs(F.query(col,F.where('d','==',d),F.limit(300)))]);
+    const mk=q=>{const r=[];q.forEach(x=>{const v=x.data();r.push({n:v.n,c:v.c,t:v.t,d:v.d})});return r};
+    CX.all=mk(a);CX.day=mk(b).sort(exCmp).slice(0,20);CX.d=d;CX.error=false;return true;
+  }catch(err){console.error('EXランキングの読み込みに失敗',err);CX.error=true;return false}
+}
+function exAdd(e){
+  const all=exLoad().concat([e]).sort(exCmp).slice(0,100);exSave(all);mine=e.n+'|'+e.t+'|'+e.d;
+  const ai=all.indexOf(e),di=all.filter(x=>x.d===e.d).indexOf(e);return {all:ai+1,daily:di+1};
+}
+let rkTab='all',rkMode='n',mine=null;
 function rkAdd(e){
   const all=rkLoad().concat([e]).sort((a,b)=>a.t-b.t).slice(0,100);rkSave(all);mine=e.n+'|'+e.t+'|'+e.d;
   const ai=all.indexOf(e),di=all.filter(x=>x.d===e.d).indexOf(e);return {all:ai+1,daily:di+1};
 }
 function renderRank(){
-  const d=todayJST(),local=rkLoad(),cloud=ONLINE&&CL.all&&CL.d===d;
-  const src=cloud?(rkTab==='day'?CL.day:CL.all):(rkTab==='day'?local.filter(x=>x.d===d):local),list=src.slice(0,cloud?20:10);
+  const ex=rkMode==='ex',C=ex?CX:CL,d=todayJST(),local=ex?exLoad():rkLoad(),cloud=ONLINE&&C.all&&C.d===d;
+  const src=cloud?(rkTab==='day'?C.day:C.all):(rkTab==='day'?local.filter(x=>x.d===d):local),list=src.slice(0,cloud?20:10);
   $('tabAll').setAttribute('aria-pressed',rkTab==='all');$('tabDay').setAttribute('aria-pressed',rkTab==='day');
-  $('rkSub').textContent=(cloud?'みんなの記録・':CL.busy?'読み込み中…・':CL.error?'みんなの記録を読み込めませんでした・':!ONLINE?'オフライン(この端末の記録)・':'この端末の記録・')+(rkTab==='day'?d+' の記録':'3ステージ合計タイム(短いほど上位)');
+  $('modeN').setAttribute('aria-pressed',!ex);$('modeEx').setAttribute('aria-pressed',ex);
+  $('rkSub').textContent=(cloud?'みんなの記録・':CL.busy?'読み込み中…・':C.error?'みんなの記録を読み込めませんでした・':!ONLINE?'オフライン(この端末の記録)・':'この端末の記録・')+(rkTab==='day'?d+' の記録・':'')+(ex?'EXステージ 制覇数が多いほど上位(同数なら合計タイムが短い順)':'3ステージ合計タイム(短いほど上位)');
   const ol=$('rkList');ol.textContent='';$('rkEmpty').hidden=list.length>0;
+  $('rkEmpty').textContent=ex?'まだ記録がありません。EXステージを1つでもクリアして登録すると載ります。':'まだ記録がありません。3ステージ全部クリアすると載ります。';
   list.forEach((e,i)=>{const li=document.createElement('li');if(mine&&mine===e.n+'|'+e.t+'|'+e.d)li.className='me';
-    [(i+1)+'位',e.n,fmtT(e.t,2)].forEach(t=>{const s=document.createElement('span');s.textContent=t;li.appendChild(s)});ol.appendChild(li)});
+    [(i+1)+'位',e.n,ex?e.c+'制覇 '+fmtT(e.t,2):fmtT(e.t,2)].forEach(t=>{const s=document.createElement('span');s.textContent=t;li.appendChild(s)});ol.appendChild(li)});
 }
-async function openRank(){show('rank');CL.error=false;renderRank();if(ONLINE){CL.busy=true;renderRank();const ok=await fbFetch();CL.busy=false;if(!ok)CL.error=true;if(G.state==='rank')renderRank()}}
+async function loadRank(){const ex=rkMode==='ex',C=ex?CX:CL;C.error=false;renderRank();if(ONLINE){CL.busy=true;renderRank();const ok=await (ex?fbFetchEx():fbFetch());CL.busy=false;if(!ok)C.error=true;if(G.state==='rank')renderRank()}}
+async function openRank(){show('rank');loadRank()}
+$('modeN').onclick=()=>{rkMode='n';loadRank()};$('modeEx').onclick=()=>{rkMode='ex';loadRank()};
 $('tabAll').onclick=()=>{rkTab='all';renderRank()};$('tabDay').onclick=()=>{rkTab='day';renderRank()};
 
 /* ================= flow ================= */
@@ -910,19 +1071,28 @@ const ALL=['title','intro','clear','fail','final','rank'];
 function show(name){ALL.forEach(n=>$(n).hidden=n!==name);G.state=name==='intro'||name==='clear'||name==='fail'||name==='final'||name==='rank'||name==='title'?name:G.state;
   $('hud').hidden=!!name;$('deck').hidden=!!name;resize()}
 function hideAll(){ALL.forEach(n=>$(n).hidden=true);$('hud').hidden=false;$('deck').hidden=false;resize()}
-const CLEAR_TALK=['なんとか停められた。会議には間に合いそうだ。','次のルートは通勤ラッシュの大通り。気を引き締めて。','最後の関門、満車の本社駐車場。ここまで来たら無事に出社しよう。'];
+const CLEAR_TALK=['なんとか停められた。会議には間に合いそうだ。','次のルートは通勤ラッシュの大通り。気を引き締めて。','最後の関門、満車の本社駐車場。ここまで来たら無事に出社しよう。','バックで狭い枠にぴたり。月極の管理人が小さく拍手している。','縦列駐車、完璧。路肩の見物人が思わず声をあげた。','本社ビルの満車駐車場を制した。もう、伝説の出勤王と呼んでいい。'];
 const FAIL_TALK={wheelstop:'『ガタンッ』…輪止めは止まるための物。乗り越えるための物ではない。',curb:'『ガリッ』…今日は電車で行こう。',car:'『ゴツッ』…保険会社に電話するところから一日が始まる。',planter:'植え込みが勝った。始業まであと少しだったのに。',pole:'ポールは動かない。動くのは、始業時間だけだ。',npc:'クラクションが鳴り響く。今日はもう出社どころではない。'};
-function toTitle(){G.practice=-1;G.times=[];loadStage(0);G.state='title';show('title');G.car.gear='N';syncLever();sfx.stop()}
-function startRun(){sfx.init();G.practice=-1;G.times=[];showIntro(0)}
-function startPractice(i){sfx.init();G.practice=i;G.times=[];showIntro(i)}
+function syncTitle(){
+  const u=exUnlocked(),b=$('exBtn');b.disabled=!u;b.textContent=u?'EXステージに挑戦':'EXステージ(未解放)';
+  $('exNote').textContent=u?'':'3ステージを全部クリアすると、さらに難しい「EXステージ」が解放されます。';
+  document.querySelectorAll('.exonly').forEach(x=>x.hidden=!u);
+}
+function toTitle(){G.practice=-1;G.ex=false;G.times=[];loadStage(0);G.state='title';syncTitle();show('title');G.car.gear='N';syncLever();sfx.stop()}
+function startRun(){sfx.init();G.practice=-1;G.ex=false;G.times=[];showIntro(0)}
+function startEx(){if(!exUnlocked())return;sfx.init();G.practice=-1;G.ex=true;G.times=[];showIntro(NORM)}
+const stName=i=>i>=NORM?'EX'+(i-NORM+1):'STAGE '+(i+1);
+function startPractice(i){sfx.init();G.practice=i;G.ex=i>=NORM;G.times=[];showIntro(i)}
 function showIntro(i){
   loadStage(i);const S=G.S;
-  $('iEye').textContent=G.practice>=0?'PRACTICE':'STAGE '+(i+1)+' / '+STAGES.length;
+  const exs=i>=NORM,nn=exs?STAGES.length-NORM:NORM;
+  $('iEye').textContent=(G.practice>=0?'PRACTICE ':'')+(exs?'EX STAGE '+(i-NORM+1)+' / '+nn:'STAGE '+(i+1)+' / '+nn);
+  $('iEye').className='eyebrow'+(exs?' ex':'');
   $('iTitle').textContent=S.title;$('iStory').textContent=S.story;
   const t=$('iTips');t.textContent='';S.tips.forEach(h=>{const d=document.createElement('div');d.innerHTML=h;t.appendChild(d)});
   show('intro');syncLever();
 }
-function beginStage(){hideAll();G.state='play';G.car.gear='N';syncLever();G.wheel=0;sfx.init();
+function beginStage(){hideAll();$('hStage').textContent=G.idx>=NORM?'EX STAGE '+(G.idx-NORM+1)+' / '+(STAGES.length-NORM):'STAGE '+(G.idx+1)+' / '+NORM;G.state='play';G.car.gear='N';syncLever();G.wheel=0;sfx.init();
   talk('出勤',G.S.opening||'8:20 自宅を出発。レバーを D に入れて出発しよう。',4800)}
 function cleared(){
   G.state='clear';sfx.ok();sfx.stop();
@@ -931,19 +1101,23 @@ function cleared(){
   G.times.push(t);showClear(t,false);
 }
 function showClear(t,prac){
-  const i=G.idx,last=i===STAGES.length-1;
+  const i=G.idx,last=i===(G.ex?STAGES.length-1:NORM-1);
   $('cTime').textContent=fmtT(t,2);
-  $('cTitle').textContent=prac?'練習 クリア':'駐車完了! STAGE '+(i+1);
+  $('cTitle').textContent=prac?'練習 クリア':'駐車完了! '+(G.ex?'EX STAGE '+(i-NORM+1):'STAGE '+(i+1));
   $('cText').textContent=CLEAR_TALK[i]||'';
   const tb=$('cTbl');tb.textContent='';
   const add=(a,b,cls)=>{const tr=document.createElement('tr');if(cls)tr.className=cls;const x=document.createElement('td'),y=document.createElement('td');x.textContent=a;y.textContent=b;tr.append(x,y);tb.appendChild(tr)};
-  if(!prac){G.times.forEach((v,k)=>add('STAGE '+(k+1),fmtT(v,2)));add('ここまでの合計',fmtT(G.times.reduce((a,b)=>a+b,0),2),'tot')}
-  $('nextBtn').textContent=prac?'タイトルへ':last?'結果を見る':'次のステージへ';
+  if(!prac){G.times.forEach((v,k)=>add(G.ex?'EX'+(k+1):'STAGE '+(k+1),fmtT(v,2)));add('ここまでの合計',fmtT(G.times.reduce((a,b)=>a+b,0),2),'tot')}
+  $('nextBtn').textContent=prac?'タイトルへ':last?'結果を見る':G.ex?'次のEXステージへ':'次のステージへ';
   show('clear');
 }
 function onFail(kind){
   G.state='fail';sfx.stop();
   $('fTitle').textContent='失格: '+MSG[kind];$('fText').textContent=FAIL_TALK[kind]||'';
+  const exRun=G.ex&&G.practice<0,nc=G.times.length;
+  $('retryBtn').textContent=exRun?'EXを最初から':'最初からやり直す';
+  $('exResBtn').hidden=!(exRun&&nc>0);
+  $('fNote').textContent=exRun?(nc>0?'ここまで '+nc+' ステージ制覇。この記録はEXランキングに登録できます。':'EXステージは1つクリアすると記録を登録できます。'):'失格のため、今回の記録はランキングに載りません。';
   $('retryBtn').hidden=G.practice>=0;$('pracBtn').textContent=G.practice>=0?'もう一度練習':'このステージを練習';
   show('fail');
 }
@@ -955,7 +1129,9 @@ const TITLES=[
  {max:1e9,l:'D',c:'#ff7a6b',n:'ベルと同時に出社',s:'課長の視線が痛い。明日は10分早く家を出よう。'}];
 function titleOf(sec){let i=TITLES.findIndex(t=>sec<=t.max);return i<0?TITLES.length-1:i}
 function showFinal(){
-  const total=G.times.reduce((a,b)=>a+b,0);
+  const total=G.times.reduce((a,b)=>a+b,0);G.exRes=false;unlockEx();
+  $('finEye').textContent='ALL CLEAR';$('finEye').className='eyebrow ok';$('finH').textContent='無事に出社!';$('rcard').hidden=false;
+  $('exGoBtn').hidden=false;
   $('finTime').textContent=fmtT(total,2);$('finText').textContent='3ステージ合計タイム';
   {const ti=titleOf(total/1000),T=TITLES[ti];$('rcard').style.setProperty('--rc',T.c);$('rcL').textContent=T.l;$('rcN').textContent=T.n;$('rcS').textContent=T.s;
    $('rcX').textContent=ti>0?'次の称号「'+TITLES[ti-1].n+'」まで あと '+fmtT(total-TITLES[ti-1].max*1000,2):'最高称号を達成!';}
@@ -964,19 +1140,39 @@ function showFinal(){
   $('regBtn').disabled=false;$('regBtn').hidden=false;$('finNote').textContent='';
   show('final');G.state='final';
 }
+function showExFinal(){
+  const c=G.times.length,all=c===STAGES.length-NORM,total=G.times.reduce((a,b)=>a+b,0);G.exRes=true;
+  $('finEye').textContent=all?'EX ALL CLEAR':'EX RESULT';$('finEye').className='eyebrow ex';
+  $('finH').textContent=all?'EXステージ 完全制覇!':'EXステージ '+c+' 制覇';
+  $('rcard').hidden=true;$('exGoBtn').hidden=true;
+  $('finTime').textContent=c+' / '+(STAGES.length-NORM)+' 制覇';$('finText').textContent='制覇したEXステージ数(同数なら合計タイム '+fmtT(total,2)+')';
+  const tb=$('finTbl');tb.textContent='';G.times.forEach((v,k)=>{const tr=document.createElement('tr');const x=document.createElement('td'),y=document.createElement('td');x.textContent='EX'+(k+1);y.textContent=fmtT(v,2);tr.append(x,y);tb.appendChild(tr)});
+  try{$('nameIn').value=localStorage.getItem('park.name')||''}catch(e){}
+  $('regBtn').disabled=false;$('regBtn').hidden=false;$('finNote').textContent='';
+  show('final');G.state='final';
+}
+$('exBtn').onclick=startEx;$('exGoBtn').onclick=startEx;$('exResBtn').onclick=showExFinal;
 $('startBtn').onclick=startRun;$('rankBtn').onclick=openRank;$('rkBack').onclick=toTitle;
 $('practice').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b)startPractice(+b.dataset.p)});
 $('goBtn').onclick=beginStage;
 $('nextBtn').onclick=()=>{
   if(G.practice>=0)return toTitle();
-  if(G.idx<STAGES.length-1)showIntro(G.idx+1);else showFinal();
+  if(G.idx<(G.ex?STAGES.length-1:NORM-1))showIntro(G.idx+1);else if(G.ex)showExFinal();else showFinal();
 };
-$('retryBtn').onclick=startRun;
+$('retryBtn').onclick=()=>{G.ex&&G.practice<0?startEx():startRun()};
 $('pracBtn').onclick=()=>{const i=G.idx;startPractice(i)};
-$('toTitle1').onclick=toTitle;$('toTitle2').onclick=toTitle;$('againBtn').onclick=startRun;
+$('toTitle1').onclick=toTitle;$('toTitle2').onclick=toTitle;$('againBtn').onclick=()=>{G.exRes?startEx():startRun()};
 $('regBtn').onclick=async()=>{
   const nm=($('nameIn').value||'ななし').trim().slice(0,8)||'ななし';try{localStorage.setItem('park.name',nm)}catch(e){}
-  const total=G.times.reduce((a,b)=>a+b,0),e={n:nm,t:Math.round(total),s:G.times.map(Math.round),d:todayJST()};
+  const total=G.times.reduce((a,b)=>a+b,0);
+  if(G.exRes){
+    const e={n:nm,c:G.times.length,t:Math.round(total),d:todayJST()};
+    $('regBtn').disabled=true;const r=exAdd(e);
+    $('finNote').textContent='登録しました(この端末で 総合'+r.all+'位 / 今日'+r.daily+'位)';
+    if(ONLINE){$('finNote').textContent+=' 全国の順位を確認中…';const o=await fbSubmitEx(e);$('finNote').textContent=o?'登録しました!EX全国 総合'+o.all+'位 / 今日'+o.daily+'位':'登録しました(オフラインのため、この端末のみ)'}
+    return;
+  }
+  const e={n:nm,t:Math.round(total),s:G.times.map(Math.round),d:todayJST()};
   $('regBtn').disabled=true;const r=rkAdd(e);
   $('finNote').textContent='登録しました(この端末で 総合'+r.all+'位 / 今日'+r.daily+'位)';
   if(ONLINE){$('finNote').textContent+=' 全国の順位を確認中…';const o=await fbSubmit(e);$('finNote').textContent=o?'登録しました!全国 総合'+o.all+'位 / 今日'+o.daily+'位':'登録しました(オフラインのため、この端末のみ)'}
@@ -1005,7 +1201,7 @@ function frame(ts){
 addEventListener('resize',resize);
 if(window.matchMedia)try{matchMedia('(orientation:landscape)').addEventListener('change',()=>setTimeout(resize,50))}catch(e){}
 document.addEventListener('contextmenu',e=>e.preventDefault());
-initPatterns();loadStage(0);resize();show('title');syncLever();
+initPatterns();loadStage(0);resize();syncTitle();show('title');syncLever();
 $('muteBtn').style.display='block';
 requestAnimationFrame(frame);
 if(window.__PARKTEST)window.__park={stepNpcs,satOverlap,dimOf,G,loadStage,simStep,carC,STAGES,stepCar,crash:()=>{},setGear:(g)=>{G.car.gear=g},checkCrash,parkCheck};
