@@ -102,6 +102,13 @@ ol.rk li.me{border-color:var(--amber);background:#2a2210}
 ol.rk li span:first-child{font:700 14px/1 var(--f-num);color:var(--amber)}
 ol.rk li span:last-child{font:700 15px/1 var(--f-num);font-variant-numeric:tabular-nums}
 .note{font-size:11px;color:var(--mute)}
+.bell{position:absolute;top:64px;left:8px;z-index:30;width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(14,17,21,.7);color:#fff;font-size:15px;cursor:pointer;padding:0}
+.bell i{position:absolute;top:-4px;right:-4px;width:11px;height:11px;border-radius:50%;background:#ff4d4d;border:2px solid #0e1115}
+.newslist{display:grid;gap:10px;width:100%;max-width:420px;max-height:60vh;overflow:auto;text-align:left}
+.newslist div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.newslist time{font:700 11px/1 var(--f-num);color:var(--amber);letter-spacing:.1em}
+.newslist b{display:block;margin:6px 0 4px;font-size:15px}
+.newslist span{display:block;font-size:13px;line-height:1.6;color:#c7d0da}
 .mute{position:absolute;top:64px;right:8px;z-index:30;width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(14,17,21,.7);color:#fff;font-size:15px;cursor:pointer;display:none}
 .ad-banner{position:absolute;left:0;right:0;bottom:0;height:var(--adh);padding-bottom:env(safe-area-inset-bottom,0px);z-index:40;display:flex;align-items:center;justify-content:center;background:#0c0e11;overflow:hidden}
 .ad-banner>*{max-width:100%}
@@ -169,6 +176,7 @@ ol.rk li span:last-child{font:700 15px/1 var(--f-num);font-variant-numeric:tabul
   </div>
 
   <button class="mute" id="muteBtn" aria-label="音">♪</button>
+  <button class="bell" id="bellBtn" aria-label="お知らせ" hidden>🔔<i id="bellDot" hidden></i></button>
 
   <section class="ov gut" id="title">
     <div class="eyebrow">COMMUTE PARKING</div>
@@ -183,7 +191,7 @@ ol.rk li span:last-child{font:700 15px/1 var(--f-num);font-variant-numeric:tabul
     <div class="row"><button class="btn" id="startBtn">出発する</button><button class="btn sub" id="rankBtn">ランキング</button></div>
     <div class="row"><button class="btn ex" id="exBtn">EXステージ</button></div>
     <p class="note" id="exNote"></p>
-    <div class="tabs" id="practice"><span class="note" style="align-self:center">練習:</span><button class="tab" data-p="0">ステージ1</button><button class="tab" data-p="1">ステージ2</button><button class="tab" data-p="2">ステージ3</button><button class="tab exonly" data-p="3" hidden>EX1</button><button class="tab exonly" data-p="4" hidden>EX2</button><button class="tab exonly" data-p="5" hidden>EX3</button></div>
+    <div class="tabs" id="practice"><span class="note" style="align-self:center">練習:</span><button class="tab" data-p="0">ステージ1</button><button class="tab" data-p="1">ステージ2</button><button class="tab" data-p="2">ステージ3</button><button class="tab exonly" data-p="3" hidden>EX1</button><button class="tab exonly" data-p="4" hidden>EX2</button><button class="tab exonly" data-p="5" hidden>EX3</button><button class="tab exonly" data-p="6" hidden>EX4</button><button class="tab exonly" data-p="7" hidden>EX5</button><button class="tab exonly" data-p="8" hidden>EX6</button></div>
     <div class="note">キーボード: ←→ ハンドル / ↑ アクセル / ↓ ブレーキ / D・N・R シフト</div>
   </section>
 
@@ -226,6 +234,12 @@ ol.rk li span:last-child{font:700 15px/1 var(--f-num);font-variant-numeric:tabul
     <p class="note" id="finNote"></p>
     <div class="row"><button class="btn ex" id="exGoBtn" hidden>EXステージに挑戦</button></div>
     <div class="row"><button class="btn sub" id="againBtn">もう一度</button><button class="btn sub" id="toTitle2">タイトルへ</button></div>
+  </section>
+
+  <section class="ov gut" id="news" hidden>
+    <h2>お知らせ</h2>
+    <div class="newslist" id="newsList"></div>
+    <button class="btn sub" id="newsBack">戻る</button>
   </section>
 
   <section class="ov gut" id="rank" hidden>
@@ -577,6 +591,126 @@ function exStage3(){
   S.zoomFar=22;S.zoomNear=12;
   return S;
 }
+function exStage4(){
+  const S=blank();
+  S.id=7;S.title='ビル街の月極駐車場(ぎりぎりの枠)';S.need='back';
+  S.story='会議までもう時間がない。路駐の並ぶ商店街を抜け、渋滞気味の国道を右折して、ビル裏の月極駐車場へ。通路は前より狭く、枠も左右の車との間は指一本ぶん。ミラーを見ずに、感覚でお尻から入れよう。';
+  S.tips=['<b>!</b><span>商店街は左右に路駐。中央をまっすぐ、ゆっくり。</span>','<b>→</b><span>国道は車が多い。右折は流れの切れ目を待つ。</span>','<b>R</b><span>通路は5.6mしかない。切り返す余地はほぼ無いので、通り過ぎる位置と最初のハンドルが勝負。</span>'];
+  S.opening='8:35 自宅を出発。会議まで時間がない。';
+  S.roads.push({x:-40,y:20,w:98.5,h:7},{x:50,y:-50,w:8.5,h:200},{x:60.7,y:52,w:42.3,h:16.0,k:'lot'},{x:58.4,y:56.9,w:2.5,h:6.1,k:'gap'});
+  houseAt(S,2,3,16,11,8.2);
+  hl(S,23.5,-40,50,true);hl(S,20.55,-40,50,false,[[6.2,13.8]]);hl(S,26.45,-40,50);
+  vl(S,54.25,-50,150,true,[[19,28]]);vl(S,50.55,-50,150,false,[[19.5,27.5]]);vl(S,57.95,-50,150,false,[[19.5,27.5],[57,63.8]]);
+  S.cross.push({x:44.4,y:20,w:3.4,h:7,dir:'v'},{x:50,y:29.2,w:8.5,h:3.4,dir:'h'});
+  S.builds.push({x:22,y:3,w:22,h:13,k:'shop',col:'#d4d0c6',aw:'#2f6f8f',side:'b'},{x:62,y:2,w:22,h:20,k:'flat',col:'#c7c9cc',hg:16},{x:88,y:6,w:18,h:16,k:'shop',col:'#cfc8bd',aw:'#b5423a',side:'b'},
+    {x:-6,y:31,w:22,h:17,k:'flat',col:'#c9c2b4'},{x:20,y:31,w:24,h:18,k:'shop',col:'#d8cfc0',aw:'#c4872a',side:'t'},{x:62,y:30,w:24,h:19,k:'flat',col:'#b9bfc6',hg:15},{x:90,y:30,w:22,h:19,k:'shop',col:'#cbc4b8',aw:'#3f7a4f',side:'t'},
+    {x:0,y:54,w:46,h:22,k:'flat',col:'#c0c3c7',hg:14},{x:62,y:72,w:44,h:14,k:'flat',col:'#c8c2b6'},{x:-6,y:82,w:30,h:16,k:'flat',col:'#bdb7ac'});
+  [26,38,50].forEach(x=>S.trees.push({x:x-6,y:17.6,r:1.4}));
+  [36,48,60,72,84,96].forEach(y=>S.trees.push({x:48.5,y:y,r:1.25}));[36,48,76,88].forEach(y=>S.trees.push({x:59.9,y:y,r:1.25}));
+  [30,46].forEach(x=>S.lamps.push({x:x,y:18.4}));[22,40].forEach(x=>S.lamps.push({x:x,y:28.9,dy:-1}));
+  /* parked cars on both kerbs, staggered */
+  S.cars.push({cx:26,cy:21.1,a:E_,col:'#2f5fa8',type:'sedan'},{cx:38,cy:21.15,a:W_,col:'#d8b240',type:'kei'},{cx:31,cy:25.9,a:W_,col:'#c23b3b',type:'sedan'},{cx:41,cy:25.9,a:E_,col:'#e6e8ea',type:'van'});
+  /* lot: narrow slots (2.55m) and a narrow aisle (6.4m) */
+  const W2=Array(13).fill(2.45),A=mkRow(61.5,52,W2,N_),B=mkRow(61.5,62.8,W2,S_);
+  S.slots=A.concat(B);park(S,A,[0,1,2,3,4,5,7,8,9,10,12],33);park(S,B,[0,1,2,3,4,5,6,7,9,10,11,12],34);
+  S.target=B[8];S.arrows.push({x:64,y:60.0,a:E_},{x:96,y:60.0,a:W_});S.bumps.push({x:59.2,y:57.0,w:0.5,h:6});
+  S.npcs.push({x1:52.2,y1:170,x2:52.2,y2:-60,n:8,off:28,types:['sedan','van','kei','sedan','sedan','van','kei','sedan']});
+  S.start={x:10,y:16.8,a:S_};
+  S.route=[{x:10,y:16},{x:10,y:19},{x:12.5,y:22.5,t:'left',say:'商店街へ左折。左右の路駐に注意'},{x:20,y:23.5},{x:44,y:23.5,t:'right',say:'国道を右折して南へ'},{x:56.4,y:30},{x:56.4,y:53,t:'left',say:'左手の月極駐車場へ(入口は狭い)'},{x:60.8,y:60.0,t:'in',say:'駐車場に入る'},{x:75,y:60.0},{x:86.7,y:60.0,t:'slot',say:'青い枠を通り過ぎて停まる(バック駐車)'},{x:82.3,y:65.7,t:'park',say:'Rに入れて、お尻から一発で枠へ'}];
+  S.guideEnd=9;
+  const bot=[{x:10,y:15.5},{x:10,y:18.6}].concat(arc(14.4,18.8,4.4,PI,PI/2+0.2,4)).concat([{x:20,y:23.5},{x:30,y:23.5},{x:44,y:23.5,v:3}]);
+  const Rr=4.5,xc=50.6;bot.push(...arc(xc,23.5+Rr,Rr,-PI/2,0,6));
+  bot.push({x:56.4,y:36,v:5},{x:56.4,y:52});
+  bot.push(...arc(56.4+4.4,56.0,4.4,PI,PI/2,6));
+  bot.push({x:68,y:60.0,v:4},{x:78,y:60.0,v:3},{x:86.725,y:60.0,v:1.5});
+  {const R=4.4,xs=86.725,ys=60.0;for(let i=0;i<=8;i++){const p=-PI/2*i/8;bot.push({x:+(xs+R*Math.sin(p)).toFixed(3),y:+(ys+R*(1-Math.cos(p))).toFixed(3),r:true,v:0.9})}}
+  bot.push({x:82.325,y:64.8,r:true,v:0.8},{x:82.325,y:65.7,r:true,v:0.7},{x:82.325,y:66.7,r:true,v:0.6});
+  S.bot=bot;
+  S.talks=[{at:1,who:'ラジオ',txt:'「8時35分。国道は渋滞気味です」'},{at:3,who:'心の声',txt:'左右に路駐…幅ぎりぎりだ。'},{at:4,who:'心の声',txt:'右折は対向車を見てから。焦らない。'},{at:7,who:'心の声',txt:'通路が狭すぎる。一発で決めたい。'}];
+  S.zoomFar=22;S.zoomNear=13;
+  return S;
+}
+function exStage5(){
+  const S=blank();
+  S.id=8;S.title='ターミナル駅前の満車駐車場(狭い入口)';
+  S.story='朝の駅前は車だらけ。入口のゲートは車1台がやっと通れる幅で、右折はひっきりなしの対向車の切れ目を縫う。場内も満車で、空いているのは両隣の車との間隔がさらに狭い1枠だけ。前から、まっすぐ、ぴったりと。';
+  S.tips=['<b>→</b><span>ゲートは幅が狭い。対向車の切れ目で、大きく外から回り込んで右折。</span>','<b>⤓</b><span>ゲートを抜けたら通路へ左折。奥の列の空き枠を先に確認しておく。</span>','<b>P</b><span>空き枠の手前で通路の奥側に寄せ、減速して大きく右に切って、前向きにまっすぐ入れる。輪止めに注意。</span>'];
+  S.opening='8:25 自宅を出発。駅前は混んでいる。';
+  S.roads.push({x:-40,y:20,w:190,h:7.4},{x:56,y:28.4,w:50,h:17,k:'lot'},{x:74.0,y:27.4,w:4.2,h:1.2,k:'gap'});
+  houseAt(S,2,3,15,11,8.2);
+  hl(S,23.7,-40,150,true);hl(S,20.55,-40,150,false,[[6.2,13.8]]);hl(S,26.85,-40,150,false,[[74.0,78.2]]);
+  S.cross.push({x:56,y:20,w:3.4,h:7.4,dir:'v'});
+  S.builds.push({x:22,y:3,w:24,h:12,k:'flat',col:'#c7c9cc',hg:15},{x:50,y:4,w:20,h:11,k:'shop',col:'#cfc8bd',aw:'#2f6f8f',side:'b'},{x:76,y:2,w:30,h:13,k:'flat',col:'#b9bfc6',hg:26},{x:112,y:4,w:30,h:11,k:'flat',col:'#c8c2b6',hg:18},
+    {x:-6,y:30,w:24,h:18,k:'flat',col:'#c9c2b4'},{x:22,y:30,w:30,h:20,k:'shop',col:'#d8cfc0',aw:'#b5423a',side:'t'},{x:56,y:49,w:50,h:20,k:'flat',col:'#aab2ba',hg:30},{x:110,y:30,w:34,h:30,k:'flat',col:'#bfc3c7',hg:20});
+  [-2,12,28,44].forEach(x=>S.trees.push({x:x+6,y:18,r:1.3}));[40,56,70].forEach(x=>S.lamps.push({x:x,y:18.4}));[96,112,128].forEach(x=>S.lamps.push({x:x,y:18.4}));
+  S.bolls.push({x:73.55,y:28.9},{x:78.65,y:28.9});
+  const W3=Array(16).fill(2.9),Aw=mkRow(56.5,28.4,Array(7).fill(2.5),N_),Ae=mkRow(78.2,28.4,Array(9).fill(2.5),N_),B=mkRow(56.5,40.2,W3,S_);
+  S.slots=Aw.concat(Ae,B);
+  park(S,Aw,[0,1,2,3,4,6],41);park(S,Ae,[0,1,2,3,5,6,7,8],42);
+  park(S,B,[0,1,2,3,4,5,6,7,8,9,10,11,13,14,15],45);
+  S.target=B[12];
+  S.arrows.push({x:80,y:36.2,a:E_});
+  S.npcs.push({x1:190,y1:25.9,x2:-60,y2:25.9,n:7,off:22,types:['sedan','van','sedan','kei','sedan','van','kei']});
+  S.start={x:10,y:16.8,a:S_};
+  S.route=[{x:10,y:16},{x:10,y:19},{x:12.5,y:22.5,t:'left',say:'大通りへ左折して東へ'},{x:20,y:23.65},{x:50,y:23.65},{x:70,y:23.65,t:'right',say:'前方のゲートへ右折(対向車に注意・入口は狭い)'},{x:76.1,y:29},{x:76.1,y:33,t:'left',say:'場内を左折して奥の列へ'},{x:84,y:35.8},{x:87.3,y:35.8,t:'slot',say:'青い枠の手前から大きく右へ。前向きに入れる'},{x:92.75,y:41.3,t:'park',say:'まっすぐ入れて停止'}];
+  S.guideEnd=9;
+  const bot=[{x:10,y:15.5},{x:10,y:18.6}].concat(arc(14.4,18.8,4.4,PI,PI/2+0.2,4)).concat([{x:20,y:23.65},{x:35,y:23.65},{x:50,y:23.65,v:4},{x:65,y:23.65,v:3.6}]);
+  bot.push(...arc(71.7,23.65+4.4,4.4,-PI/2,0,6));
+  bot.push({x:76.1,y:30,v:3},{x:76.1,y:31.4,v:3});
+  bot.push(...arc(80.5,31.4,4.4,PI,PI/2,6));
+  bot.push({x:84,y:35.8,v:2.4},{x:87.25,y:35.8,v:1.4});
+  bot.push(...arc(87.25,41.3,5.5,-PI/2,0,10).map(q=>({...q,v:1.0})));
+  bot.push({x:92.75,y:41.4,v:0.6});
+  S.bot=bot;
+  S.talks=[{at:1,who:'ラジオ',txt:'「8時25分。駅前は大変混雑しています」'},{at:3,who:'心の声',txt:'右折は対向車の切れ目を待って、大きく回り込む。'},{at:5,who:'心の声',txt:'ゲートは狭い。ポールに当てないように。'},{at:7,who:'心の声',txt:'空いているのは1枠だけ…両隣の車が近い。'}];
+  S.zoomFar=22;S.zoomNear=12;
+  return S;
+}
+
+function exStage6(){
+  const S=blank();
+  S.id=9;S.title='大通り裏の縦列駐車(最後の1台分)';S.need='para';
+  S.story='始業まであとわずか。取引先の本社ビル裏は、どの駐車場も満車。頼みは路肩に空いた、さっきよりさらに短い1台分だけ。前後の車との間は拳ひとつ。大通りの切れ目を縫って、一発できれいに平行にそろえよう。';
+  S.tips=['<b>!</b><span>路地は左右に路駐の車が互い違い。幅ぎりぎりを蛇行して抜ける。</span>','<b>→</b><span>大通りは右折も左折も、対向車の切れ目を待つ。</span>','<b>P</b><span>空きは短い。前の車の横にぴったり寄せて停まり、Rで斜めに下がって切り返し、平行にそろえる。ハンドルは早めに戻す。</span>'];
+  S.opening='8:45 自宅を出発。始業15分前。';
+  S.roads.push({x:-40,y:20,w:102,h:7.4},{x:62,y:-50,w:10.5,h:220},{x:-40,y:72,w:290,h:6.4},{x:72.5,y:69.4,w:3.4,h:2.7},{x:101.5,y:69.5,w:60,h:2.5});
+  houseAt(S,2,3,15,11,8.2);
+  hl(S,23.7,-40,62,true);hl(S,20.55,-40,62,false,[[6.2,13.8]]);hl(S,26.85,-40,62);
+  vl(S,67.25,-50,170,true,[[19,27],[71,79]]);vl(S,62.55,-50,170,false,[[19,27],[71.5,79]]);vl(S,71.95,-50,170,false,[[19,27],[71.5,79]]);
+  hl(S,75.2,-40,250,true,[[62,72.5]]);hl(S,72.5,-40,62,false);hl(S,72.5,72.5,250,false);hl(S,77.9,-40,250,false,[[62,72.5]]);
+  S.cross.push({x:56,y:20,w:3.4,h:7.4,dir:'v'},{x:62,y:30,w:10.5,h:3.4,dir:'h'},{x:84,y:72,w:3.4,h:6.4,dir:'v'});
+  S.builds.push({x:22,y:3,w:24,h:12,k:'flat',col:'#c7c9cc',hg:15},{x:50,y:4,w:8,h:11,k:'shop',col:'#cfc8bd',aw:'#2f6f8f',side:'b'},{x:76,y:2,w:24,h:22,k:'flat',col:'#b9bfc6',hg:22},{x:104,y:4,w:26,h:18,k:'flat',col:'#c8c2b6',hg:18},
+    {x:-6,y:30,w:24,h:18,k:'flat',col:'#c9c2b4'},{x:22,y:30,w:34,h:20,k:'shop',col:'#d8cfc0',aw:'#b5423a',side:'t'},{x:76,y:34,w:24,h:34,k:'flat',col:'#aab2ba',hg:26},{x:104,y:32,w:28,h:30,k:'flat',col:'#bfc3c7',hg:20},{x:136,y:34,w:30,h:30,k:'shop',col:'#d4d0c6',aw:'#2f6f8f',side:'b'},
+    {x:0,y:56,w:56,h:12,k:'flat',col:'#c0c3c7',hg:18},{x:0,y:82,w:56,h:16,k:'flat',col:'#bdb7ac'},{x:92,y:84,w:70,h:20,k:'flat',col:'#c8c2b6'},{x:166,y:56,w:60,h:12,k:'flat',col:'#c8c2b6'},{x:166,y:84,w:60,h:14,k:'flat',col:'#c0c3c7',hg:14},{x:62,y:100,w:14,h:16,k:'shop',col:'#cbc4b8',aw:'#3f7a4f',side:'t'});
+  [-2,12,28,44].forEach(x=>S.trees.push({x:x+6,y:18,r:1.3}));
+  [36,52,90,106,122].forEach(y=>S.trees.push({x:60.4,y:y,r:1.25}));[36,52,64,100].forEach(y=>S.trees.push({x:74.4,y:y,r:1.25}));
+  [48,60,70].forEach(x=>S.lamps.push({x:x,y:18.4}));[30,50].forEach(x=>S.lamps.push({x:x,y:28.3,dy:-1}));[112,150].forEach(x=>S.lamps.push({x:x,y:68.6}));
+  S.cars.push({cx:24,cy:21.3,a:E_,col:'#8a97a4',type:'van'},{cx:47,cy:21.3,a:E_,col:'#1c1f24',type:'sedan'},{cx:29,cy:25.95,a:W_,col:'#d8b240',type:'kei'},{cx:37,cy:25.95,a:W_,col:'#c23b3b',type:'sedan'},{cx:44,cy:25.95,a:E_,col:'#e6e8ea',type:'van'});
+  /* kerbside parking strip: cars before and after the free parallel space */
+  const strip=[[104,'sedan','#2f5fa8'],[109.5,'kei','#d8b240'],[115,'sedan','#e6e8ea'],[121.6,'sedan','#c23b3b'],[132.3,'sedan','#1c1f24'],[138.4,'van','#8a97a4'],[143.9,'sedan','#3d7a55'],[149.4,'kei','#e6e8ea'],[154.9,'sedan','#6a4b8c']];
+  strip.forEach(q=>S.cars.push({cx:q[0],cy:70.75,a:E_,col:q[2],type:q[1]}));
+  S.slots=[];
+  S.target={x:123.9,y:69.5,w:6.0,d:2.4,cx:126.7,cy:70.7,axis:0};
+  S.npcs.push({x1:64.6,y1:190,x2:64.6,y2:-60,n:5,off:16,types:['sedan','van','sedan','kei','van']},{x1:250,y1:76.1,x2:-40,y2:76.1,n:3,off:0,types:['van','sedan','kei']});
+  S.start={x:10,y:16.8,a:S_};
+  S.route=[{x:10,y:16},{x:10,y:19},{x:12.5,y:22.5,t:'left',say:'路地へ左折。左右の路駐に注意'},{x:20,y:23.65},{x:36,y:23.65},{x:56,y:23.65,t:'right',say:'大通りを右折して南へ(対向車に注意)'},{x:69.9,y:30},{x:69.9,y:62,t:'left',say:'次の信号を左折して東へ'},{x:76,y:73.6},{x:110,y:73.6,t:'slot',say:'左の路肩の空きを通り過ぎて停まる(縦列駐車)'},{x:132.1,y:73.6},{x:125.4,y:70.7,t:'park',say:'Rに入れて、斜めに下がって平行にそろえる'}];
+  S.guideEnd=10;
+  const bot=[{x:10,y:15.5},{x:10,y:18.6}].concat(arc(14.4,18.8,4.4,PI,PI/2+0.2,4)).concat([{x:20,y:23.65},{x:28,y:23.65},{x:36,y:23.65},{x:44,y:23.65},{x:50,y:23.65,v:3}]);
+  bot.push(...arc(65.3,23.65+4.6,4.6,-PI/2,0,6));
+  bot.push({x:69.9,y:36,v:5},{x:69.9,y:64});
+  bot.push(...arc(69.9+4.4,69.2,4.4,PI,PI/2,6));
+  bot.push({x:80,y:73.6,v:4},{x:110,y:73.6,v:4},{x:128,y:73.6,v:2.4});
+  {const R=4.6,ys=73.6,yf=70.7,xf=125.4,th=Math.acos(1-(ys-yf)/(2*R)),xs=xf+2*R*Math.sin(th);
+   bot.push({x:+(xs-1.2).toFixed(3),y:ys,v:1.4},{x:+xs.toFixed(3),y:ys,v:1.2});
+   for(let i=0;i<=8;i++){const p=th*i/8;bot.push({x:+(xs-R*Math.sin(p)).toFixed(3),y:+(ys-R*(1-Math.cos(p))).toFixed(3),r:true,v:1.1})}
+   const x1=xs-R*Math.sin(th),y1=ys-R*(1-Math.cos(th));
+   for(let i=1;i<=8;i++){const p=th*(1-i/8);bot.push({x:+(x1+R*(Math.sin(p)-Math.sin(th))).toFixed(3),y:+(y1-R*(Math.cos(p)-Math.cos(th))).toFixed(3),r:true,v:0.6})}
+   const last=bot[bot.length-1];bot.push({x:+(last.x-0.3).toFixed(3),y:last.y,r:true,v:0.45});}
+  S.bot=bot;
+  S.talks=[{at:1,who:'ラジオ',txt:'「8時40分。この先の大通りは混雑しています」'},{at:3,who:'心の声',txt:'路地の蛇行。ミラー代わりに目で見て。'},{at:6,who:'心の声',txt:'右折は対向車の流れを見極めよう。'},{at:9,who:'心の声',txt:'どこも満車…路肩に、本当に短い空きが1台分だけ。'},{at:11,who:'心の声',txt:'前後はぎりぎり。落ち着いて、早めにハンドルを戻そう。'}];
+  S.zoomFar=22;S.zoomNear=12;
+  return S;
+}
 /* ================= rendering ================= */
 const cv=$('view'),ctx=cv.getContext('2d');
 let DPR=1,VW=0,VH=0,PLAYH=0;
@@ -746,7 +880,7 @@ function drawTarget(g,S,t){
 }
 /* ================= game state ================= */
 const NORM=3;
-const STAGES=[stage1,stage2,stage3,exStage1,exStage2,exStage3].filter(f=>typeof f==='function');
+const STAGES=[stage1,stage2,stage3,exStage1,exStage2,exStage3,exStage4,exStage5,exStage6].filter(f=>typeof f==='function');
 const G={state:'title',idx:0,S:null,car:null,npcs:[],inp:{steer:0,thr:false,brk:false},time:0,times:[],hold:0,holdStart:0,practice:-1,
   cam:{x:0,y:0,z:14},parts:[],crash:null,wp:0,talkT:0,talked:{},t:0,wheel:0,grab:false,keyL:0,keyR:0,toast:0,clock:0};
 let ONLINE=navigator.onLine!==false;
@@ -1067,11 +1201,22 @@ $('modeN').onclick=()=>{rkMode='n';loadRank()};$('modeEx').onclick=()=>{rkMode='
 $('tabAll').onclick=()=>{rkTab='all';renderRank()};$('tabDay').onclick=()=>{rkTab='day';renderRank()};
 
 /* ================= flow ================= */
-const ALL=['title','intro','clear','fail','final','rank'];
-function show(name){ALL.forEach(n=>$(n).hidden=n!==name);G.state=name==='intro'||name==='clear'||name==='fail'||name==='final'||name==='rank'||name==='title'?name:G.state;
-  $('hud').hidden=!!name;$('deck').hidden=!!name;resize()}
-function hideAll(){ALL.forEach(n=>$(n).hidden=true);$('hud').hidden=false;$('deck').hidden=false;resize()}
-const CLEAR_TALK=['なんとか停められた。会議には間に合いそうだ。','次のルートは通勤ラッシュの大通り。気を引き締めて。','最後の関門、満車の本社駐車場。ここまで来たら無事に出社しよう。','バックで狭い枠にぴたり。月極の管理人が小さく拍手している。','縦列駐車、完璧。路肩の見物人が思わず声をあげた。','本社ビルの満車駐車場を制した。もう、伝説の出勤王と呼んでいい。'];
+const ALL=['title','intro','clear','fail','final','rank','news'];
+/* お知らせ: 新しいものを先頭に追加していく(d は YYYY-MM-DD) */
+const NEWS=[{d:'2026-11-16',t:'EXステージ追加!',b:'3ステージをクリアすると挑戦できる、さらに難しい「EXステージ」(全3つ)が登場。制覇した数で競う専用ランキングもできました。'}];
+const NEWS_KEY='park.news.seen';
+function newsSeen(){try{return localStorage.getItem(NEWS_KEY)||''}catch(e){return ''}}
+function syncBell(){$('bellDot').hidden=!(NEWS.length&&NEWS[0].d>newsSeen())}
+function openNews(){
+  const l=$('newsList');l.textContent='';
+  NEWS.forEach(n=>{const d=document.createElement('div'),t=document.createElement('time'),b=document.createElement('b'),s=document.createElement('span');t.textContent=n.d.replace(/-/g,'/');b.textContent=n.t;s.textContent=n.b;d.append(t,b,s);l.appendChild(d)});
+  try{localStorage.setItem(NEWS_KEY,NEWS[0].d)}catch(e){}
+  syncBell();show('news');
+}
+function show(name){ALL.forEach(n=>$(n).hidden=n!==name);G.state=name==='intro'||name==='clear'||name==='fail'||name==='final'||name==='rank'||name==='title'||name==='news'?name:G.state;
+  $('bellBtn').hidden=name!=='title';$('hud').hidden=!!name;$('deck').hidden=!!name;resize()}
+function hideAll(){$('bellBtn').hidden=true;ALL.forEach(n=>$(n).hidden=true);$('hud').hidden=false;$('deck').hidden=false;resize()}
+const CLEAR_TALK=['なんとか停められた。会議には間に合いそうだ。','次のルートは通勤ラッシュの大通り。気を引き締めて。','最後の関門、満車の本社駐車場。ここまで来たら無事に出社しよう。','バックで狭い枠にぴたり。月極の管理人が小さく拍手している。','縦列駐車、完璧。路肩の見物人が思わず声をあげた。','本社ビルの満車駐車場を制した。まだ上があるらしいが。','指一本ぶんの隙間にお尻から収めた。管理人が帽子を取った。','ひっきりなしの駅前を抜けて、満車の1枠を射止めた。もう敵はいない…はず。','最後の1台分を、一発で平行に。もう、伝説の出勤王と呼んでいい。'];
 const FAIL_TALK={wheelstop:'『ガタンッ』…輪止めは止まるための物。乗り越えるための物ではない。',curb:'『ガリッ』…今日は電車で行こう。',car:'『ゴツッ』…保険会社に電話するところから一日が始まる。',planter:'植え込みが勝った。始業まであと少しだったのに。',pole:'ポールは動かない。動くのは、始業時間だけだ。',npc:'クラクションが鳴り響く。今日はもう出社どころではない。'};
 function syncTitle(){
   const u=exUnlocked(),b=$('exBtn');b.disabled=!u;b.textContent=u?'EXステージに挑戦':'EXステージ(未解放)';
@@ -1151,7 +1296,7 @@ function showExFinal(){
   $('regBtn').disabled=false;$('regBtn').hidden=false;$('finNote').textContent='';
   show('final');G.state='final';
 }
-$('exBtn').onclick=startEx;$('exGoBtn').onclick=startEx;$('exResBtn').onclick=showExFinal;
+$('bellBtn').onclick=openNews;$('newsBack').onclick=toTitle;$('exBtn').onclick=startEx;$('exGoBtn').onclick=startEx;$('exResBtn').onclick=showExFinal;
 $('startBtn').onclick=startRun;$('rankBtn').onclick=openRank;$('rkBack').onclick=toTitle;
 $('practice').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b)startPractice(+b.dataset.p)});
 $('goBtn').onclick=beginStage;
@@ -1201,7 +1346,7 @@ function frame(ts){
 addEventListener('resize',resize);
 if(window.matchMedia)try{matchMedia('(orientation:landscape)').addEventListener('change',()=>setTimeout(resize,50))}catch(e){}
 document.addEventListener('contextmenu',e=>e.preventDefault());
-initPatterns();loadStage(0);resize();syncTitle();show('title');syncLever();
+initPatterns();loadStage(0);resize();syncTitle();syncBell();show('title');syncLever();
 $('muteBtn').style.display='block';
 requestAnimationFrame(frame);
 if(window.__PARKTEST)window.__park={stepNpcs,satOverlap,dimOf,G,loadStage,simStep,carC,STAGES,stepCar,crash:()=>{},setGear:(g)=>{G.car.gear=g},checkCrash,parkCheck};
