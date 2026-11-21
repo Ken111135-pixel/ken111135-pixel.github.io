@@ -85,6 +85,9 @@ ul.rules li{margin:3px 0}
 canvas#cv{width:100%;max-width:440px;aspect-ratio:4/5;display:block;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:10px}
 .under{display:flex;align-items:center;gap:10px;margin:10px auto 0;max-width:440px}
 .gl{font-size:11px;color:var(--mute);letter-spacing:.06em}
+.ready{max-width:440px;height:6px;margin:10px auto 0;background:var(--panel);border-radius:3px;overflow:hidden}
+.ready i{display:block;height:100%;width:0;background:var(--line)}
+.ready.go i{background:var(--brass)}
 .pips{display:flex;gap:6px}
 .pips span{width:12px;height:12px;border-radius:50%;background:var(--brass)}
 .pips span.used{background:var(--line)}
@@ -137,9 +140,9 @@ canvas#cv{width:100%;max-width:440px;aspect-ratio:4/5;display:block;touch-action
     <h2>RULES</h2>
     <ul class="rules">
       <li>1ターン3投、5ターンの合計点が高い方の勝ち(最大900点)。</li>
-      <li>照準はありません。手元のダーツが向いている先が狙いです。押したまま指を動かして狙い、離すと投げます。</li>
-      <li>構えている時間が長いほど手が大きく震えます。短く決めるのがコツです。</li>
-      <li>「傾き操作」をONにすると、スマホを傾けて狙い、実際の手の震えがダーツに出ます。</li>
+      <li>照準はありません。手元のダーツが向いている先が狙いです。押したまま指を動かして狙い、少し待ってから離すと投げます。</li>
+      <li>構えてから少し待たないと投げられません。待つほど手が大きく震えます。</li>
+      <li>傾き操作では、タップで構えて、合図の後にスマホを奥に倒すと発射されます。倒す勢いが強いほど高く飛び、左右は傾きで決まります。</li>
     </ul>
   </section>
 
@@ -154,6 +157,7 @@ canvas#cv{width:100%;max-width:440px;aspect-ratio:4/5;display:block;touch-action
     <div class="sb" id="sb"></div>
     <div class="status" id="status"></div>
     <div class="boardwrap"><canvas id="cv" aria-label="ダーツボード"></canvas></div>
+    <div class="ready" id="ready"><i id="ready-i"></i></div>
     <div class="under"><div class="gl">残りダーツ</div><div class="pips" id="pips"><span></span><span></span><span></span></div></div>
     <p class="hint" id="hint">ボードを押したまま指を動かして狙い、離すと投げます。照準は出ません。手元のダーツの向きを見て狙います。</p>
     <div class="actions" style="max-width:440px;margin:12px auto 0"><button class="btn" id="b-forfeit" hidden>相手が戻らないので勝ちにする</button></div>
@@ -175,6 +179,8 @@ var sleep=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
 var ORDER=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
 var BRASS='#d6ab4e',STEEL='#7fa6c9';
 var HAND_ME=[0,250],HAND_OPP=[120,258],OY=215;
+/* READY_MS: 構えてから投げられるまでの待ち。OM0: 高さ0(ブル)になる倒す勢い(度/秒)。KY: 勢い1度/秒あたりの高さ(mm) */
+var READY_MS=1500,OM0=350,KY=.6;
 
 /* ---------- board geometry (millimetres, regulation) ---------- */
 function scoreAt(x,y){
@@ -196,8 +202,8 @@ function popText(d){return d.l==='BULL'?'BULL 50':(d.p&&d.l!==String(d.p)?d.l+' 
 /* ---------- state ---------- */
 var S={db:null,user:null,uid:null,canWrite:false,meDoc:null,board:null,boardState:'loading',tilt:false,sound:true,view:'home'};
 var G=null,M=null;
-var A={on:false,t0:0,lx:0,ly:0,base:[0,-40],last:[0,-40],ph:[0,0,0,0,0,0],g0:0,b0:0};
-var T={g:0,b:0,lg:0,lb:0,seen:false};
+var A={on:false,t0:0,lx:0,ly:0,base:[0,-40],last:[0,-40],ph:[0,0,0,0,0,0],g0:0,b0:0,fl:null,rd:false};
+var T={g:0,b:0,lg:0,lb:0,pt:0,pb:0,v:0,seen:false};
 function myRating(){return (S.meDoc&&S.meDoc.rating)||1000}
 function canRanked(){return !!(S.db&&S.uid&&S.canWrite)}
 async function use(n){try{return (window.claude&&window.claude.use)?await window.claude.use(n):null}catch(e){return null}}
@@ -224,6 +230,7 @@ function noise(t,dur,vol,f0,f1){
 }
 var SFX={
   whoosh:function(){noise(0,.35,.22,500,2600)},
+  tick:function(){tone(1250,0,0,.09,'square',.08)},
   thud:function(){tone(170,50,0,.14,'sine',.5);noise(0,.05,.3,1800,900)},
   bull:function(){SFX.thud();[880,1175,1568].forEach(function(f,i){tone(f,0,.05+i*.09,.35,'triangle',.22)})},
   triple:function(){SFX.thud();tone(660,0,.05,.2,'square',.1);tone(990,0,.13,.25,'square',.1)},
@@ -361,7 +368,8 @@ function amp(t){return 5+Math.min(t,3.5)*8}
 function clampA(v){return Math.max(-195,Math.min(195,v))}
 function aimBase(){
   if(S.tilt){
-    return [clampA(A.base[0]+(T.g-A.g0)*12+(T.g-T.lg)*40),clampA(A.base[1]+(T.b-A.b0)*12+(T.b-T.lb)*40)];
+    /* 傾き操作: 左右だけ傾きで決める。高さは投げる時の勢いで決まる */
+    return [clampA(A.base[0]+(T.g-A.g0)*12+(T.g-T.lg)*40),-30];
   }
   return A.base;
 }
@@ -433,10 +441,18 @@ function frame(now){
   ctx.setTransform(1,0,0,1,sx*PX,sy*PX);ctx.drawImage(cache,0,0);
   ctx.setTransform(PX,0,0,PX,W/2+sx*PX,OY*PX+sy*PX);
   G.stuck.forEach(function(d){stuckDart(ctx,d)});
-  if(canThrow()){
-    var P;
+  var ok=canThrow(),key=!ok?'x':(A.on?((now-A.t0)>=READY_MS?'go':'wait'):'idle');
+  if(key!==G.aimKey){
+    G.aimKey=key;
+    if(key==='go'&&!A.rd){A.rd=true;SFX.tick()}
+    setStatus();
+  }
+  $('#ready-i').style.width=(ok&&A.on?Math.min(1,(now-A.t0)/READY_MS)*100:0)+'%';
+  $('#ready').classList.toggle('go',key==='go');
+  if(ok){
+    var P,by=S.tilt?-30:A.last[1];
     if(A.on){var t=(now-A.t0)/1000,b=aimBase(),w=swayAt(t);P=[b[0]+w[0],b[1]+w[1]]}
-    else P=[A.last[0],A.last[1]+Math.sin(now/700)*1.5];
+    else P=[A.last[0],by+Math.sin(now/700)*1.5];
     heldDart(ctx,HAND_ME,P);
   }
   var f=G.flight;
@@ -511,9 +527,10 @@ cv.addEventListener('pointerdown',function(e){
   if(!canThrow())return;
   e.preventDefault();
   try{cv.setPointerCapture(e.pointerId)}catch(_){}
-  A.on=true;A.t0=performance.now();A.lx=e.clientX;A.ly=e.clientY;
+  A.on=true;A.t0=performance.now();A.lx=e.clientX;A.ly=e.clientY;A.fl=null;A.rd=false;
   A.ph=[0,0,0,0,0,0].map(function(){return Math.random()*6.28});
   A.base=[A.last[0],A.last[1]];A.g0=T.g;A.b0=T.b;
+  setNote('');
 });
 cv.addEventListener('pointermove',function(e){
   if(!A.on)return;
@@ -524,8 +541,13 @@ cv.addEventListener('pointermove',function(e){
   }
   A.lx=e.clientX;A.ly=e.clientY;
 });
-cv.addEventListener('pointerup',function(e){e.preventDefault();release()});
-cv.addEventListener('pointercancel',function(){A.on=false});
+cv.addEventListener('pointerup',function(e){
+  e.preventDefault();
+  if(S.tilt||!A.on)return;
+  if(performance.now()-A.t0<READY_MS){A.on=false;setNote('構えが短すぎます。少し構えてから離してください。');return}
+  release();
+});
+cv.addEventListener('pointercancel',function(){if(!S.tilt)A.on=false});
 function launch(d,owner,done,aimP){
   var H=owner==='me'?HAND_ME:HAND_OPP;
   var tx=aimP?aimP[0]:d.x,ty=aimP?aimP[1]:d.y,dx=tx-H[0],dy=ty-H[1],L=Math.hypot(dx,dy)||1;
@@ -542,6 +564,27 @@ function release(){
   var s=scoreAt(x,y),d={x:Math.round(x*10)/10,y:Math.round(y*10)/10,p:s.p,l:s.l};
   G.busy=true;
   launch(d,'me',function(){G.cur.push(d);G.busy=false;afterMyDart()},[px,py]);
+}
+/* 傾き操作の発射: スマホを奥に倒した速さ(勢い)が高さになる */
+function tiltThrow(peak,xa){
+  if(!A.on||!canThrow())return;
+  A.on=false;
+  var x=xa+gauss()*2.5,y=clampA(-(peak-OM0)*KY)+gauss()*5;
+  A.last=[xa,A.last[1]];
+  var s=scoreAt(x,y),d={x:Math.round(x*10)/10,y:Math.round(y*10)/10,p:s.p,l:s.l};
+  setNote('勢い '+Math.round(peak)+'°/s');
+  G.busy=true;
+  launch(d,'me',function(){G.cur.push(d);G.busy=false;afterMyDart()},[x,y]);
+}
+function flickStep(now){
+  if(!S.tilt||!A.on||!canThrow())return;
+  if(now-A.t0<READY_MS){A.fl=null;return}
+  if(!A.fl){
+    if(T.v>150)A.fl={t0:now,peak:T.v,x:aimBase()[0]};
+    return;
+  }
+  if(T.v>A.fl.peak)A.fl.peak=T.v;
+  if(T.v<60||now-A.fl.t0>380){var pk=A.fl.peak,xx=A.fl.x;A.fl=null;tiltThrow(pk,xx)}
 }
 function afterMyDart(){
   setPips();
@@ -568,14 +611,25 @@ function setNote(t){$('#leave-note').textContent=t||''}
 
 /* ---------- tilt / sound toggles ---------- */
 function onOri(e){
-  if(e.gamma==null)return;
-  if(!T.seen){T.lg=e.gamma;T.lb=e.beta}
+  if(e.gamma==null||e.beta==null)return;
+  var now=performance.now();
+  if(!T.seen){T.lg=e.gamma;T.lb=e.beta;T.pt=now;T.pb=e.beta;T.v=0}
+  var dt=(now-T.pt)/1000;
+  /* v: 奥に倒す向きの角速度(度/秒)。手前に起こす向きは負 */
+  if(dt>.003&&dt<.25){T.v=T.v*.35+((T.pb-e.beta)/dt)*.65}
+  T.pt=now;T.pb=e.beta;
   T.g=e.gamma;T.b=e.beta;T.seen=true;
   T.lg+=(T.g-T.lg)*.1;T.lb+=(T.b-T.lb)*.1;
+  flickStep(now);
+}
+function setHint(){
+  $('#hint').textContent=S.tilt
+    ?'画面をタップして構え、少し待って合図が出たらスマホを奥に倒して投げます。倒す勢いが強いほど高く飛び、左右は傾きで決まります。'
+    :'ボードを押したまま指を動かして狙い、少し待ってから離すと投げます。照準は出ません。手元のダーツの向きを見て狙います。';
 }
 $('#b-tilt').addEventListener('click',async function(){
   var btn=this,msg=$('#t-msg');
-  if(S.tilt){S.tilt=false;btn.setAttribute('aria-pressed','false');btn.textContent='傾き操作 OFF';msg.textContent='ドラッグで狙います。';return}
+  if(S.tilt){S.tilt=false;btn.setAttribute('aria-pressed','false');btn.textContent='傾き操作 OFF';msg.textContent='ドラッグで狙います。';setHint();return}
   var D=window.DeviceOrientationEvent;
   if(!D){msg.textContent='この端末では傾きを取得できません。ドラッグで遊べます。';return}
   try{
@@ -587,7 +641,7 @@ $('#b-tilt').addEventListener('click',async function(){
   T.seen=false;window.addEventListener('deviceorientation',onOri);
   msg.textContent='傾きを確認しています…';
   await sleep(1500);
-  if(T.seen){S.tilt=true;btn.setAttribute('aria-pressed','true');btn.textContent='傾き操作 ON';msg.textContent='ボードを押した瞬間の向きが基準です。傾けて狙い、離すと投げます。手の震えがそのままダーツに出ます。'}
+  if(T.seen){S.tilt=true;btn.setAttribute('aria-pressed','true');btn.textContent='傾き操作 ON';setHint();msg.textContent='タップで構え、合図が出たらスマホを奥に倒して投げます。倒す勢いが高さになり、手の震えがそのまま出ます。'}
   else{window.removeEventListener('deviceorientation',onOri);msg.textContent='このビューでは端末の傾きが届きませんでした。ドラッグ操作で遊べます。'}
 });
 $('#b-snd').addEventListener('click',function(){
@@ -610,7 +664,8 @@ function newGame(kind,extra){
     first:Math.random()<.5?'me':'opp',oppId:null,oppName:'CPU',oppRating:1000,r0:myRating(),
     cur:[],stuck:[],flight:null,pop:null,ref:null,unsub:null,matchId:null,lastOppAt:Date.now(),forfeit:false,leaveArmed:false},extra||{});
   G.fx={parts:[],rings:[],banners:[],flash:null,shake:null};
-  A.last=[0,-40];
+  A.last=[0,-40];A.on=false;A.fl=null;
+  setHint();
   $('#result').hidden=true;$('#b-forfeit').hidden=true;$('#leave').hidden=false;$('#b-leave').textContent='やめる';setNote('');
   buildScore();renderScore();setPips();
   show('game');
@@ -646,7 +701,13 @@ function setStatus(){
   if(G.over)s='';
   else{
     var rd=Math.floor((G.mine.length+G.shownOpp)/2)+1;
-    if(G.turn==='me')s='ROUND '+rd+'/5 ・ あなたの番 ・ '+(G.cur.length+1)+'投目';
+    if(G.turn==='me'){
+      s='ROUND '+rd+'/5 ・ あなたの番 ・ '+(G.cur.length+1)+'投目';
+      if(!G.busy){
+        if(A.on)s+=(G.aimKey==='go')?(S.tilt?' ・ いまだ!奥に倒して投げる':' ・ 離すと投げる'):' ・ 構え中…';
+        else if(S.tilt)s+=' ・ 画面をタップして構える';
+      }
+    }
     else s='ROUND '+rd+'/5 ・ '+G.oppName+'の番'+(G.kind==='live'&&!G.busy?'(待っています)':'');
   }
   $('#status').textContent=s;
