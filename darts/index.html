@@ -82,9 +82,14 @@ ul.rules li{margin:3px 0}
 .sb .cur{outline:1.5px solid var(--brass);outline-offset:-1.5px}
 .status{margin:12px 0 6px;font-weight:700;min-height:1.5em}
 .boardwrap{display:flex;justify-content:center}
-canvas#cv{width:100%;max-width:440px;aspect-ratio:4/5;display:block;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:10px}
+canvas#cv{width:100%;max-width:440px;aspect-ratio:400/456;display:block;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:10px}
 .under{display:flex;align-items:center;gap:10px;margin:10px auto 0;max-width:440px}
 .gl{font-size:11px;color:var(--mute);letter-spacing:.06em}
+.gl.clk{margin-left:auto;font-size:14px;color:var(--fg);font-variant-numeric:tabular-nums}
+.gl.clk.low{color:var(--red);font-weight:700}
+.gate{text-align:center;padding:56px 0 0}
+.gate .bb{font-family:var(--display);font-size:72px;letter-spacing:.1em;color:var(--brass);line-height:1}
+.gate .gt{font-size:17px;font-weight:700;margin:14px 0 0}
 .ready{max-width:440px;height:6px;margin:10px auto 0;background:var(--panel);border-radius:3px;overflow:hidden}
 .ready i{display:block;height:100%;width:0;background:var(--line)}
 .ready.go i{background:var(--brass)}
@@ -113,7 +118,16 @@ canvas#cv{width:100%;max-width:440px;aspect-ratio:4/5;display:block;touch-action
     <div id="top-rate"><span>RATING</span><b id="tr">1000</b></div>
   </header>
 
-  <section id="v-home">
+  <section id="v-gate">
+    <div class="gate">
+      <div class="bb">OCHE</div>
+      <p class="gt">このゲームはスマホの傾きセンサーで遊びます。</p>
+      <p class="note" id="g-msg">下のボタンを押して、傾きを許可してください。許可がないと遊べません。</p>
+      <div class="actions" style="max-width:300px;margin:22px auto 0"><button class="btn primary" id="b-gate">傾きを許可してはじめる</button></div>
+    </div>
+  </section>
+
+  <section id="v-home" hidden>
     <div class="hero" hidden>
       <div class="lbl">YOUR RATING</div>
       <div class="rate" id="h-rate">1000</div>
@@ -130,19 +144,18 @@ canvas#cv{width:100%;max-width:440px;aspect-ratio:4/5;display:block;touch-action
     </div>
     <p class="note" id="h-note"></p>
     <div class="row">
-      <button class="chip" id="b-tilt" aria-pressed="false">傾き操作 OFF</button>
       <button class="chip" id="b-snd" aria-pressed="true">効果音 ON</button>
     </div>
-    <p id="t-msg">傾き操作はスマホを傾けて狙います。使えない環境ではドラッグで狙います。</p>
     <h2 hidden>RANKING</h2>
     <ol class="rank" id="rank" hidden></ol>
     <div class="empty" id="rank-empty" hidden>読み込み中…</div>
     <h2>RULES</h2>
     <ul class="rules">
       <li>1ターン3投、5ターンの合計点が高い方の勝ち(最大900点)。</li>
-      <li>照準はありません。手元のダーツが向いている先が狙いです。押したまま指を動かして狙い、少し待ってから離すと投げます。</li>
-      <li>構えてから少し待たないと投げられません。待つほど手が大きく震えます。早く離すとダーツを落とします。</li>
-      <li>傾き操作では、左右の傾きで向きを決めて画面を長押しすると向きが固定されます。押したままスマホを奥に倒すと発射され、勢いが強いほど高く飛びます。途中で指を離すとダーツを落とし、1投が無駄になります。</li>
+      <li>スマホを左右に傾けて向きを決めます。照準は出ません。手前に浮かぶダーツが向いている先が狙いで、手の震えはそのまま向きに出ます。</li>
+      <li>画面を長押しすると向きが固定されます。押したままスマホを奥に倒すと発射され、勢いが強いほど高く飛びます。</li>
+      <li>途中で指を離すとダーツを落とし、1投が無駄になります。</li>
+      <li>1投につき25秒の制限があります。時間切れもダーツを落とします。</li>
     </ul>
   </section>
 
@@ -158,7 +171,7 @@ canvas#cv{width:100%;max-width:440px;aspect-ratio:4/5;display:block;touch-action
     <div class="status" id="status"></div>
     <div class="boardwrap"><canvas id="cv" aria-label="ダーツボード"></canvas></div>
     <div class="ready" id="ready"><i id="ready-i"></i></div>
-    <div class="under"><div class="gl">残りダーツ</div><div class="pips" id="pips"><span></span><span></span><span></span></div></div>
+    <div class="under"><div class="gl">残りダーツ</div><div class="pips" id="pips"><span></span><span></span><span></span></div><div class="gl clk" id="clock"></div></div>
     <p class="hint" id="hint">ボードを押したまま指を動かして狙い、離すと投げます。照準は出ません。手元のダーツの向きを見て狙います。</p>
     <div class="actions" style="max-width:440px;margin:12px auto 0"><button class="btn" id="b-forfeit" hidden>相手が戻らないので勝ちにする</button></div>
     <div class="result" id="result" hidden>
@@ -180,7 +193,7 @@ var ORDER=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
 var BRASS='#d6ab4e',STEEL='#7fa6c9';
 var HAND_ME=[0,250],HAND_OPP=[120,258],OY=215;
 /* READY_MS: 構えてから投げられるまでの待ち。OM0: 高さ0(ブル)になる倒す勢い(度/秒)。KY: 勢い1度/秒あたりの高さ(mm) */
-var READY_MS=1500,OM0=350,KY=.6,LOCK_MS=900;
+var READY_MS=1500,OM0=350,KY=.6,LOCK_MS=900,TIME_MS=25000,DZ=900,FZ=300,DL=80;
 
 /* ---------- board geometry (millimetres, regulation) ---------- */
 function scoreAt(x,y){
@@ -241,7 +254,7 @@ var SFX={
 
 /* ---------- views ---------- */
 function show(v){
-  ['home','match','game'].forEach(function(n){$('#v-'+n).hidden=(n!==v)});
+  ['gate','home','match','game'].forEach(function(n){$('#v-'+n).hidden=(n!==v)});
   S.view=v;
   if(v==='game'){fit();}
   window.scrollTo(0,0);
@@ -321,7 +334,7 @@ function buildCache(){
 }
 function fit(){
   SZ=cv.clientWidth||300;DPR=Math.min(window.devicePixelRatio||1,2);
-  cv.width=Math.round(SZ*DPR);cv.height=Math.round(SZ*1.25*DPR);PX=cv.width/400;buildCache();
+  cv.width=Math.round(SZ*DPR);cv.height=Math.round(SZ*1.14*DPR);PX=cv.width/400;buildCache();
 }
 window.addEventListener('resize',function(){if(S.view==='game')fit()});
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){if(S.view==='game')buildCache()});
@@ -343,19 +356,25 @@ function stuckDart(c,d){
   var dx=d.x-d.hx,dy=d.y-d.hy,l=Math.hypot(dx,dy)||1;
   dartDraw(c,d.x,d.y,dx/l,dy/l,17,.55,d.col);
 }
-function heldDart(c,H,P){
-  var dx=P[0]-H[0],dy=P[1]-H[1],L=Math.hypot(dx,dy)||1;dx/=L;dy/=L;
-  var len=80,tx=H[0]+dx*len,ty=H[1]+dy*len,px=-dy,py=dx,ang=Math.atan2(dy,dx);
-  var cx=tx-dx*len*.92,cy=ty-dy*len*.92;
-  c.save();c.lineCap='round';
-  c.strokeStyle='#4f392b';c.lineWidth=34;c.beginPath();c.moveTo(cx,cy);c.lineTo(cx*.35,cy+170);c.stroke();
-  c.fillStyle='#5d4331';c.beginPath();c.ellipse(cx,cy,20,14,ang,0,7);c.fill();
-  dartDraw(c,tx,ty,dx,dy,len,1,BRASS);
-  var f=[tx-dx*len*.42,ty-dy*len*.42];
-  c.fillStyle='#8f6a4b';
-  c.beginPath();c.ellipse(f[0]+px*5,f[1]+py*5,8,3.8,ang,0,7);c.fill();
-  c.beginPath();c.ellipse(f[0]-px*5,f[1]-py*5,8,3.8,ang,0,7);c.fill();
+/* 手前に浮かぶダーツ(遠近法): 視点から DZ mm、ボード面が基準。ダーツはボードの手前 FZ mm に浮かび、狙い点 P を向く */
+function sproj(z){return DZ/(DZ-z)}
+function floatPose(P,ox){
+  P=[Math.max(-170,Math.min(170,P[0])),Math.max(-170,Math.min(100,P[1]))];
+  var tip=[P[0]*.5+ox,P[1]*.5+90,FZ];
+  var u=[P[0]-tip[0],P[1]-tip[1],-FZ],n=Math.hypot(u[0],u[1],u[2]);
+  u=[u[0]/n,u[1]/n,u[2]/n];
+  var tail=[tip[0]-u[0]*DL,tip[1]-u[1]*DL,tip[2]-u[2]*DL];
+  var s1=sproj(tip[2]),s2=sproj(tail[2]);
+  var tx=tip[0]*s1,ty=tip[1]*s1,ax=tail[0]*s2,ay=tail[1]*s2;
+  var dx=tx-ax,dy=ty-ay,L=Math.hypot(dx,dy)||1;
+  return {tx:tx,ty:ty,dx:dx/L,dy:dy/L,len:Math.max(L*1.4,72),sc:(s1+s2)/2};
+}
+function heldDart(c,P){
+  var ps=floatPose(P,0);
+  c.save();c.globalAlpha=.22;c.fillStyle='#000';
+  c.beginPath();c.ellipse(ps.tx*.55,ps.ty*.55+40,26,7,0,0,7);c.fill();
   c.restore();
+  dartDraw(c,ps.tx,ps.ty,ps.dx,ps.dy,ps.len,ps.sc,BRASS);
 }
 
 /* ---------- aim, sway ---------- */
@@ -370,7 +389,8 @@ function aimBase(){
   if(S.tilt){
     /* 傾き操作: 左右だけ傾きで決める。高さは投げる時の勢いで決まる */
     if(A.lk)return [A.lockX,-30];
-    return [clampA((T.g-A.g0)*12+(T.g-T.lg)*40),-30];
+    var el=(G&&G.dl)?(performance.now()-(G.dl-TIME_MS))/1000:0,kf=1+Math.min(Math.max(el,0)/15,1)*.7;
+    return [clampA((T.g-A.g0)*12+(T.g-T.lg)*70*kf),-30];
   }
   return A.base;
 }
@@ -449,6 +469,13 @@ function frame(now){
     if(!A.cal&&T.seen){A.g0=T.g;A.cal=true}
     if(A.on&&!A.lk&&now-A.t0>=LOCK_MS){A.lockX=aimBase()[0];A.lk=true}
   }
+  if(ok){
+    var kk=G.mine.length*3+G.cur.length;
+    if(G.dlKey!==kk){G.dlKey=kk;G.dl=now+TIME_MS}
+    var left=Math.max(0,Math.ceil((G.dl-now)/1000));
+    if(left!==G.clk){G.clk=left;var ck=$('#clock');ck.textContent='残り'+left+'秒';ck.classList.toggle('low',left<=5)}
+    if(now>G.dl){dropNow();ok=false}
+  }else if(G.clk!==-1){G.clk=-1;$('#clock').textContent=''}
   var key=!ok?'x':(A.on?((S.tilt?A.lk:(now-A.t0)>=READY_MS)?'go':'wait'):'idle');
   if(key!==G.aimKey){
     G.aimKey=key;
@@ -462,7 +489,7 @@ function frame(now){
     if(A.on){var t=(now-A.t0)/1000,b=aimBase(),w=swayAt(t);P=[b[0]+w[0],b[1]+w[1]]}
     else if(S.tilt)P=aimBase();
     else P=[A.last[0],by+Math.sin(now/700)*1.5];
-    heldDart(ctx,HAND_ME,P);
+    heldDart(ctx,P);
   }
   var f=G.flight;
   if(f){
@@ -477,7 +504,7 @@ function frame(now){
       var e=1-Math.pow(1-p,1.7);
       var px=f.sx+(f.x-f.sx)*e,py=f.sy+(f.y-f.sy)*e-Math.sin(Math.PI*p)*55;
       var vx=f.x-f.sx,vy=f.y-f.sy,vl=Math.hypot(vx,vy)||1;
-      dartDraw(ctx,px,py,vx/vl,vy/vl,80-63*e,1-.45*e,f.col);
+      dartDraw(ctx,px,py,vx/vl,vy/vl,f.l0+(17-f.l0)*e,f.s0+(.55-f.s0)*e,f.col);
     }
   }
   F.rings=F.rings.filter(function(r){
@@ -559,9 +586,8 @@ cv.addEventListener('pointerup',function(e){
 });
 cv.addEventListener('pointercancel',function(){if(!S.tilt)A.on=false});
 function launch(d,owner,done,aimP){
-  var H=owner==='me'?HAND_ME:HAND_OPP;
-  var tx=aimP?aimP[0]:d.x,ty=aimP?aimP[1]:d.y,dx=tx-H[0],dy=ty-H[1],L=Math.hypot(dx,dy)||1;
-  G.flight={x:d.x,y:d.y,hx:H[0],hy:H[1],sx:H[0]+dx/L*80,sy:H[1]+dy/L*80,t0:performance.now(),dur:540,col:owner==='me'?BRASS:STEEL,owner:owner,d:d,done:done};
+  var ps=floatPose(aimP||[d.x,d.y],owner==='me'?0:60);
+  G.flight={x:d.x,y:d.y,hx:ps.tx,hy:ps.ty,sx:ps.tx,sy:ps.ty,l0:ps.len,s0:ps.sc,t0:performance.now(),dur:540,col:owner==='me'?BRASS:STEEL,owner:owner,d:d,done:done};
   SFX.whoosh();
 }
 function release(){
@@ -579,12 +605,23 @@ function release(){
 function tiltThrow(peak,xa,drop){
   if(!A.on||!canThrow())return;
   A.on=false;A.lk=false;
-  var x=xa+gauss()*2.5,y=clampA(-(peak-OM0)*KY)+gauss()*5;
+  var x=xa+gauss()*4.5,y=clampA(-(peak-OM0)*KY)+gauss()*5;
   A.last=[xa,A.last[1]];
   var s=scoreAt(x,y),d={x:Math.round(x*10)/10,y:Math.round(y*10)/10,p:s.p,l:s.l};
   setNote(drop?'手が離れて、ダーツを落としました。':'勢い '+Math.round(peak)+'°/s');
   G.busy=true;
-  launch(d,'me',function(){G.cur.push(d);G.busy=false;afterMyDart()},[x,y]);
+  launch(d,'me',function(){G.cur.push(d);G.busy=false;afterMyDart()},[xa,-30]);
+}
+function dropNow(){
+  if(!canThrow())return;
+  var xa=aimBase()[0];
+  A.on=false;A.lk=false;A.fl=null;
+  var x=xa+gauss()*4.5,y=195+gauss()*4;
+  A.last=[xa,A.last[1]];
+  var s=scoreAt(x,y),d={x:Math.round(x*10)/10,y:Math.round(y*10)/10,p:s.p,l:s.l};
+  setNote('時間切れ。ダーツを落としました。');
+  G.busy=true;
+  launch(d,'me',function(){G.cur.push(d);G.busy=false;afterMyDart()},[xa,-30]);
 }
 function flickStep(now){
   if(!S.tilt||!A.on||!canThrow())return;
@@ -634,26 +671,28 @@ function onOri(e){
 }
 function setHint(){
   $('#hint').textContent=S.tilt
-    ?'スマホを左右に傾けて向きを決め、画面を長押しすると向きが固定されます。押したままスマホを奥に倒すと発射。倒す勢いが強いほど高く飛びます。途中で指を離すとダーツを落とします(1投消費)。'
+    ?'スマホを左右に傾けて向きを決め、画面を長押しすると向きが固定されます。押したままスマホを奥に倒すと発射。倒す勢いが強いほど高く飛びます。途中で指を離すか、1投25秒を過ぎると、ダーツを落とします(1投消費)。'
     :'ボードを押したまま指を動かして狙い、少し待ってから離すと投げます。早く離すとダーツを落とします(1投消費)。照準は出ません。手元のダーツの向きを見て狙います。';
 }
-$('#b-tilt').addEventListener('click',async function(){
-  var btn=this,msg=$('#t-msg');
-  if(S.tilt){S.tilt=false;btn.setAttribute('aria-pressed','false');btn.textContent='傾き操作 OFF';msg.textContent='ドラッグで狙います。';setHint();return}
+async function enableTilt(){
+  var msg=$('#g-msg'),btn=$('#b-gate');
+  function fail(t){msg.textContent=t;btn.disabled=false;btn.textContent='もう一度許可する';return false}
+  btn.disabled=true;
   var D=window.DeviceOrientationEvent;
-  if(!D){msg.textContent='この端末では傾きを取得できません。ドラッグで遊べます。';return}
+  if(!D)return fail('このブラウザでは傾きセンサーが使えません。スマホのブラウザで開いてください。');
   try{
     if(typeof D.requestPermission==='function'){
       var r=await D.requestPermission();
-      if(r!=='granted'){msg.textContent='傾きの許可が出ませんでした。ドラッグで遊べます。';return}
+      if(r!=='granted')return fail('傾きの許可が出ませんでした。許可しないと遊べません。もう一度押して許可してください。');
     }
-  }catch(e){msg.textContent='傾きの許可を取得できませんでした。ドラッグで遊べます。';return}
-  T.seen=false;window.addEventListener('deviceorientation',onOri);
-  msg.textContent='傾きを確認しています…';
+  }catch(e){return fail('傾きの許可を取得できませんでした。もう一度お試しください。')}
+  T.seen=false;window.removeEventListener('deviceorientation',onOri);window.addEventListener('deviceorientation',onOri);
+  msg.textContent='傾きセンサーを確認しています…';
   await sleep(1500);
-  if(T.seen){S.tilt=true;btn.setAttribute('aria-pressed','true');btn.textContent='傾き操作 ON';setHint();msg.textContent='傾けて向きを決め、長押しで固定。押したまま奥に倒して投げます。倒す勢いが高さになり、手の震えが固定前の向きにそのまま出ます。'}
-  else{window.removeEventListener('deviceorientation',onOri);msg.textContent='このビューでは端末の傾きが届きませんでした。ドラッグ操作で遊べます。'}
-});
+  if(!T.seen){window.removeEventListener('deviceorientation',onOri);return fail('傾きの動きを検出できませんでした。スマホ本体のブラウザで、HTTPSのページとして開いているか確認してください。')}
+  S.tilt=true;setHint();show('home');renderHome();return true;
+}
+$('#b-gate').addEventListener('click',enableTilt);
 $('#b-snd').addEventListener('click',function(){
   S.sound=!S.sound;this.setAttribute('aria-pressed',String(S.sound));this.textContent='効果音 '+(S.sound?'ON':'OFF');
   if(S.sound){ac();SFX.thud()}
@@ -672,7 +711,7 @@ function cpuTurn(r){
 function newGame(kind,extra){
   G=Object.assign({kind:kind,mine:[],opp:[],shownOpp:0,busy:false,over:false,turn:null,
     first:Math.random()<.5?'me':'opp',oppId:null,oppName:'CPU',oppRating:1000,r0:myRating(),
-    cur:[],stuck:[],flight:null,pop:null,ref:null,unsub:null,matchId:null,lastOppAt:Date.now(),forfeit:false,leaveArmed:false},extra||{});
+    cur:[],stuck:[],flight:null,pop:null,ref:null,unsub:null,matchId:null,lastOppAt:Date.now(),forfeit:false,leaveArmed:false,dlKey:-1,dl:0,clk:-1,aimKey:''},extra||{});
   G.fx={parts:[],rings:[],banners:[],flash:null,shake:null};
   A.last=[0,-40];A.on=false;A.fl=null;A.lk=false;A.cal=false;
   setHint();
@@ -913,6 +952,9 @@ setInterval(function(){
 
 /* ---------- boot ---------- */
 (async function(){
+  show('gate');
+  var D0=window.DeviceOrientationEvent;
+  if(D0&&typeof D0.requestPermission!=='function'){enableTilt()}
   renderHome();renderRank();
   var db=await use('db'),user=await use('user');
   S.db=db;S.user=user;
