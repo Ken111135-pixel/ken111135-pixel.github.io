@@ -165,14 +165,14 @@ html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset
       <li>途中で指を離すとダーツを落とし、1投が無駄になります。</li>
       <li>1投につき25秒の制限があります。時間切れもダーツを落とします。</li>
       <li>勝敗でレートが増減(イロレーティング)。引き分けは小さく動きます。</li>
-      <li>レート戦は、他のプレイヤーが過去に投げた記録(ゴースト)か、CPUと対戦します。</li>
+      <li>レート戦は、同時に探している人とリアルタイムで対戦します。見つからなければ、過去の記録(ゴースト)かCPUが相手です。</li>
     </ul>
   </section>
 
   <section id="v-match" hidden>
     <div class="radar"><i></i></div>
     <div id="mm-sub">対戦相手を探しています…</div>
-    <p class="note">過去の記録から相手を探しています。</p>
+    <p class="note">最長12秒。見つからなければ、過去の記録(ゴースト)かCPUが相手になります。</p>
     <div class="actions" style="max-width:260px;margin:22px auto 0"><button class="btn small" id="b-cancel">キャンセル</button></div>
   </section>
 
@@ -207,7 +207,9 @@ var RT={
   on:function(){return !!DB_URL},
   url:function(p,q){return DB_URL.replace(/\/+$/,'')+'/'+p+'.json'+(q?'?'+q:'')},
   get:async function(p,q){var r=await fetch(RT.url(p,q));if(!r.ok)throw new Error('get '+r.status);return r.json()},
-  put:async function(p,v){var r=await fetch(RT.url(p),{method:'PUT',body:JSON.stringify(v)});if(!r.ok)throw new Error('put '+r.status);return r.json()}
+  put:async function(p,v){var r=await fetch(RT.url(p),{method:'PUT',body:JSON.stringify(v)});if(!r.ok)throw new Error('put '+r.status);return r.json()},
+  patch:async function(p,v){var r=await fetch(RT.url(p),{method:'PATCH',body:JSON.stringify(v)});if(!r.ok)throw new Error('patch '+r.status);return r.json()},
+  del:async function(p){var r=await fetch(RT.url(p),{method:'DELETE'});if(!r.ok)throw new Error('del '+r.status);return null}
 };
 var TOP50='orderBy='+encodeURIComponent('"rating"')+'&limitToLast=50';
 var TOP60='orderBy='+encodeURIComponent('"rating"')+'&limitToLast=60';
@@ -286,7 +288,7 @@ function renderHome(){
   var meta=d?((d.w||0)+'勝 '+(d.l||0)+'敗 '+(d.d||0)+'分'):'未対戦(初期レート)';
   if(idx>=0) meta+=' ・ '+(idx+1)+'位';
   $('#h-meta').textContent=meta;
-  $('#h-note').textContent=RT.on()?'レート戦は、他のプレイヤーの記録(ゴースト)かCPUが相手です。結果はランキングに載ります。':'ランキングは未設定です。レートはこの端末だけに保存されます。';
+  $('#h-note').textContent=RT.on()?'レート戦は、同時に探している人と対戦します(最長12秒)。いなければ、過去の記録かCPUが相手です。結果はランキングに載ります。':'ランキングは未設定です。レートはこの端末だけに保存されます。';
 }
 function renderRank(){
   var ol=$('#rank'),em=$('#rank-empty');
@@ -664,10 +666,7 @@ function afterMyDart(){
     if(!G||G.over)return;
     G.mine.push(turn);G.cur=[];G.stuck=[];G.busy=false;G.lastOppAt=Date.now();
     renderScore();setPips();
-    if(G.kind==='live'&&G.ref){
-      var upd={rounds:{},at:{}};upd.rounds[S.uid]=G.mine;upd.at[S.uid]=Date.now();
-      G.ref.update(upd).catch(function(){setNote('通信に失敗しました。もう一度ターンを送ります…');setTimeout(function(){G&&G.ref&&G.ref.update(upd).catch(function(){})},1500)});
-    }
+    if(G.kind==='live')G.pushP=pushRounds(G);
     advance();
   },turnPause(turn.t));
 }
@@ -845,6 +844,11 @@ async function finish(opts){
   $('#b-forfeit').hidden=true;
   if(G.kind==='live'&&G.first==='me'&&G.ref&&!opts.loss){G.ref.delete().catch(function(){})}
   if(G.unsub){try{G.unsub()}catch(e){}G.unsub=null}
+  if(G.kind==='live'){
+    var gg=G;
+    try{if(opts.loss)await RT.put('matches/'+gg.matchId+'/left/'+S.uid,true);else if(gg.pushP)await gg.pushP}catch(e){}
+    if(gg.creator)setTimeout(function(){RT.del('matches/'+gg.matchId).catch(function(){})},25000);
+  }
   if(K&&canRanked())await record(res,delta,mt);
 }
 async function record(res,delta,mt){
@@ -862,12 +866,64 @@ async function record(res,delta,mt){
   }
 }
 
-/* ---------- matchmaking (ghost / cpu) ---------- */
+/* ---------- matchmaking: live (queue + matches) -> ghost -> cpu ---------- */
 var M=null;
+async function joinById(mid){
+  var m=await RT.get('matches/'+mid);
+  if(!m||m.b!==S.uid)return null;
+  await RT.put('matches/'+mid+'/ack',true);
+  return {mid:mid,doc:m};
+}
+async function createMatch(token,pid,pe){
+  var me=S.uid;
+  var mid='m_'+me.slice(-6)+pid.slice(-6)+Date.now().toString(36);
+  var doc={a:me,b:pid,ra:myRating(),rb:(pe&&pe.rating)||1000,na:S.name||'プレイヤー',nb:(pe&&pe.name)||'プレイヤー',first:Math.random()<.5?me:pid,at:{'.sv':'timestamp'}};
+  await RT.put('matches/'+mid,doc);
+  try{await RT.patch('queue/'+pid,{mid:mid})}catch(e){RT.del('matches/'+mid).catch(function(){});return null}
+  for(var k=0;k<8&&M===token;k++){
+    await sleep(800);
+    var m=await RT.get('matches/'+mid).catch(function(){return null});
+    if(m&&m.ack)return {mid:mid,doc:m};
+  }
+  RT.del('matches/'+mid).catch(function(){});
+  RT.patch('queue/'+pid,{mid:null}).catch(function(){});
+  return null;
+}
+async function findLive(token){
+  var me=S.uid,t0=Date.now(),off=0,hbT=0,result=null;
+  try{
+    await RT.put('queue/'+me,{name:S.name||'プレイヤー',rating:myRating(),at:{'.sv':'timestamp'}});
+    hbT=Date.now();
+  }catch(e){return null}
+  while(M===token&&!result&&Date.now()-t0<12000){
+    await sleep(1200);
+    if(M!==token)break;
+    try{
+      var q=(await RT.get('queue'))||{};
+      var mine=q[me];
+      if(mine&&typeof mine.at==='number'&&hbT)off=mine.at-hbT;
+      var sv=Date.now()+off;
+      if(mine&&mine.mid){result=await joinById(mine.mid);if(result)break}
+      hbT=Date.now();
+      RT.patch('queue/'+me,{at:{'.sv':'timestamp'}}).catch(function(){});
+      Object.keys(q).forEach(function(k){var e=q[k];if(e&&typeof e.at==='number'&&sv-e.at>60000)RT.del('queue/'+k).catch(function(){})});
+      var ids=Object.keys(q).filter(function(k){var e=q[k];return k!==me&&e&&!e.mid&&typeof e.at==='number'&&sv-e.at<8000});
+      ids.push(me);ids.sort();
+      var i=ids.indexOf(me);
+      if(i%2===0&&i+1<ids.length){var pid=ids[i+1];result=await createMatch(token,pid,q[pid]);if(result)break}
+    }catch(e){}
+  }
+  if(M===token||M===null)RT.del('queue/'+me).catch(function(){});
+  return result;
+}
 async function startRanked(){
   ac();
   show('match');$('#mm-sub').textContent='対戦相手を探しています…';
-  var me={};M=me;
+  var token={};M=token;
+  var res=null;
+  if(RT.on())res=await findLive(token);
+  if(M!==token)return;
+  if(res){M=null;startLive(res);return}
   var g=null;
   if(RT.on()){
     try{
@@ -879,11 +935,39 @@ async function startRanked(){
       });
     }catch(e){}
   }
-  await sleep(1200);
-  if(M!==me)return;
+  await sleep(300);
+  if(M!==token)return;
   M=null;
   if(g)newGame('ghost',{oppId:g.id,oppName:(g.name||'プレイヤー')+'(ゴースト)',oppRating:g.rating,ghostRounds:g.rounds});
   else newGame('cpu',{oppName:'CPU',oppRating:myRating()});
+}
+function startLive(res){
+  var d=res.doc,me=S.uid,iA=d.a===me,timer=null;
+  newGame('live',{matchId:res.mid,creator:iA,first:d.first===me?'me':'opp',oppId:iA?d.b:d.a,r0:iA?d.ra:d.rb,oppRating:iA?d.rb:d.ra,oppName:(iA?d.nb:d.na)||'プレイヤー'});
+  var g=G;
+  g.unsub=function(){clearInterval(timer)};
+  timer=setInterval(function(){pollMatch(g)},1000);
+}
+async function pollMatch(g){
+  if(G!==g||g.over||g.polling)return;
+  g.polling=true;
+  try{
+    var m=await RT.get('matches/'+g.matchId);
+    if(G===g&&!g.over&&m){
+      var r=m.rounds&&m.rounds[g.oppId];
+      if(Array.isArray(r)&&r.length>g.opp.length){g.opp=r;g.lastOppAt=Date.now();advance()}
+      if(m.left&&m.left[g.oppId]&&!g.over){g.forfeit=true;finish()}
+    }
+  }catch(e){}
+  g.polling=false;
+}
+function pushRounds(g,n){
+  n=n||0;
+  return RT.put('matches/'+g.matchId+'/rounds/'+S.uid,g.mine).catch(function(){
+    if(n>=6)return null;
+    setNote('通信に失敗しました。再送します…');
+    return sleep(1500).then(function(){return pushRounds(g,n+1)});
+  });
 }
 $('#b-cancel').addEventListener('click',function(){M=null;show('home')});
 
